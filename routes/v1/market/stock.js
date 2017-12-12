@@ -9,7 +9,7 @@ var schedule = require('node-schedule');
 
 /* scheduler to get the latest stock price every minute */
 
-var j = schedule.scheduleJob('* * * * *', function(){
+var j = schedule.scheduleJob('5 * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update stock price ' + date);
   updateStockPrice();
