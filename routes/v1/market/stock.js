@@ -7,6 +7,7 @@ var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var schedule = require('node-schedule');
 
+/* scheduler to get the latest stock price every minute */
 
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
@@ -30,21 +31,26 @@ function updateStockPrice(){
 			var symbol = stocks[i].symbol;
 			url = base_url + 'query?function=TIME_SERIES_INTRADAY&symbol='+symbol+'&interval=1min&apikey='+api_key;
     		request.get(url, (error, response, body) => {
-  				let data = JSON.parse(body);
-  				let time_series = data['Time Series (1min)'];
-  				let res_symbol = data['Meta Data']['2. Symbol'];
-  				var keys = [];
-  				for(var k in time_series) keys.push(k);
-  				let res_price = time_series[keys[0]]['4. close'];
- 				var date = new Date().toISOString();
-  				var new_price = {'symbol':res_symbol,'price':res_price, 'date_time':date}
-  				_db.collection('stock_price').remove({'symbol':res_symbol}, function(err, result){
-  					_db.collection('stock_price').insert(new_price, function(err, result){
+    		    if (error != null){
+    		    	console.log(error);
+    		    }
+    		    else {
+  					let data = JSON.parse(body);
+  					let time_series = data['Time Series (1min)'];
+  					let res_symbol = data['Meta Data']['2. Symbol'];
+  					var keys = [];
+  					for(var k in time_series) keys.push(k);
+  					let res_price = time_series[keys[0]]['4. close'];
+ 					var date = new Date().toISOString();
+  					var new_price = {'symbol':res_symbol,'price':res_price, 'date_time':date}
+  					_db.collection('stock_price').remove({'symbol':res_symbol}, function(err, result){
+  						_db.collection('stock_price').insert(new_price, function(err, result){
         					if (err == null) {
         						console.log('price for ' + res_symbol + ' is ' + new_price.price);
         					}
   						})	
-  					})				
+  					})
+  				}				
     		})
 		}
 	})
@@ -94,12 +100,12 @@ router.get('/symbols/version/:version', function(req, res) {
 
 
 /* GET the latest Stock price. */
+/*
 router.get('/quote/array/:array', function(req, res) {   
 	var req_symbols = req.params.array.split(',');
 	var db_price_dic = {};
 	var res_price_dic = {};
-	const request = require("request");
-	var url;
+
 	var dict = {};
 	var _db;
 		
@@ -169,8 +175,35 @@ router.get('/quote/array/:array', function(req, res) {
     	}
     })
 });
+*/
 
-
+router.get('/quote/array/:array', function(req, res) {   
+	var req_symbols = req.params.array.split(',');
+	var res_price_dic = {};
+	var db_price_dic = {};
+	var _db;
+		
+	mongoClient.connectAsync(req.db_url)  
+    .then(function(db) {
+    	_db = db;
+    	return _db.collection('stock_price').find().toArray();
+    })
+	
+	.then(function(db_price_array){
+		if (db_price_array) {
+    		for (var i in db_price_array) {
+    			db_price_dic[db_price_array[i].symbol] = {'price':db_price_array[i].price};
+    		}
+    	}
+    		
+    	for (var i in req_symbols)	{
+      	    var rec = db_price_dic[req_symbols[i]]; 
+    	   	res_price_dic[req_symbols[i]] = rec.price;
+    	}
+    	
+    	res.json({'status':'200','data':res_price_dic});
+    })
+});
 
 
 module.exports = router;
