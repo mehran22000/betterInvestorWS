@@ -31,7 +31,8 @@ function updateStockPrice(){
 			var symbol = stocks[i].symbol;
 			url = base_url + 'query?function=TIME_SERIES_INTRADAY&symbol='+symbol+'&interval=1min&apikey='+api_key;
     		request.get(url, (error, response, body) => {
-    		    if (error != null){
+    		    console.log(error);
+    		    if (error){
     		    	console.log(error);
     		    }
     		    else {
