@@ -17,7 +17,8 @@
     "mongodb": "*",
     "mongoose": "*",
     "mongoskin": "*",
-    "node-schedule": "^1.2.5"
+    "node-schedule": "^1.2.5",
+    "request":"*"
   },
   "devDependencies": {
     "request": "^2.81.0",
