@@ -38,23 +38,26 @@ function updateStockPrice(){
     		    	console.log(error);
     		    }
     		    else {
-  					console.log(response);
   					let data = JSON.parse(body);
-  					console.log(data)
   					let time_series = data['Time Series (1min)'];
-  					let res_symbol = data['Meta Data']['2. Symbol'];
-  					var keys = [];
-  					for(var k in time_series) keys.push(k);
-  					let res_price = time_series[keys[0]]['4. close'];
- 					var date = new Date().toISOString();
-  					var new_price = {'symbol':res_symbol,'price':res_price, 'date_time':date}
-  					_db.collection('stock_price').remove({'symbol':res_symbol}, function(err, result){
-  						_db.collection('stock_price').insert(new_price, function(err, result){
-        					if (err == null) {
-        						console.log('price for ' + res_symbol + ' is ' + new_price.price);
-        					}
-  						})	
-  					})
+  					if (time_series){
+  						let res_symbol = data['Meta Data']['2. Symbol'];
+  						var keys = [];
+  						for(var k in time_series) keys.push(k);
+  						let res_price = time_series[keys[0]]['4. close'];
+ 						var date = new Date().toISOString();
+  						var new_price = {'symbol':res_symbol,'price':res_price, 'date_time':date}
+  						_db.collection('stock_price').remove({'symbol':res_symbol}, function(err, result){
+  							_db.collection('stock_price').insert(new_price, function(err, result){
+        						if (err == null) {
+        							console.log('price for ' + res_symbol + ' is ' + new_price.price);
+        						}
+  							})	
+  						})
+  					}
+  					else {
+  						console.log('Empty Data');
+  					}
   				}				
     		})
 		}
