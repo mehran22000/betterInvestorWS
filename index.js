@@ -4,6 +4,7 @@ var profile = require('./routes/v1/user/profile');
 var portfolio = require('./routes/v1/user/portfolio');
 var mongo = require('mongoskin');
 var bodyParser = require('./node_modules/body-parser');
+var rankings = require('./routes/v1/ranking/rankings');
 var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var db = mongo.db(db_url, {native_parser:true});
 

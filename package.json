@@ -18,7 +18,8 @@
     "mongoose": "*",
     "mongoskin": "*",
     "node-schedule": "^1.2.5",
-    "request":"*"
+    "request": "*",
+    "sort-array": "*"
   },
   "devDependencies": {
     "request": "^2.81.0",
