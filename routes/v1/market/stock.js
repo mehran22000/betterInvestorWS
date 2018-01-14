@@ -45,7 +45,7 @@ function updateStockPrice(){
   								var keys = [];
   								for(var k in time_series) keys.push(k);
   								let res_price = time_series[keys[0]]['4. close'];
- 								if (res_price){
+ 								if (res_price > 0){
  									var date = new Date().toISOString();
   									var new_price = {'symbol':res_symbol,'price':res_price, 'date_time':date}
   									_db.collection('stock_price').remove({'symbol':res_symbol}, function(err, result){
@@ -207,10 +207,11 @@ router.get('/quote/array/:array', function(req, res) {
     			db_price_dic[db_price_array[i].symbol] = {'price':db_price_array[i].price};
     		}
     	}
-    		
     	for (var i in req_symbols)	{
       	    var rec = db_price_dic[req_symbols[i]]; 
-    	   	res_price_dic[req_symbols[i]] = rec.price;
+      	    if (rec){
+    	   		res_price_dic[req_symbols[i]] = rec.price;
+    	   	}
     	}
     	
     	res.json({'status':'200','data':res_price_dic});

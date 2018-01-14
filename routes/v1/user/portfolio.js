@@ -100,6 +100,34 @@ router.post('/', function(req, res) {
 				return(_db.collection('portfolio').remove({'_id':cur_pos._id}))
 		}
 	})
+	
+	// check if stock symbol is available in stock_price table
+	.then(function(result){
+		return (_db.collection('stock_price').findOne({'symbol':symbol}));
+	})
+	
+	
+	// if the stock symbol is now, add it to the stock_price table
+	.then(function(result){
+		if (result) {
+			console.log(symbol + 'added to stock_price table');
+			return true;
+		}
+		else {
+		      new_symbol = {"symbol":symbol, "price":price,"date_time":""};
+			  return (_db.collection('stock_price').insert(new_symbol));
+		}
+	})
+	
+	.then(function(result){
+		if (result) {
+			console.log("stocK_price table updated successfully");
+		}
+		else {
+			console.log("stocK_price table update failed");
+		}
+	})
+	
 		
 	.catch(function(err) {
         if (!errCode){
