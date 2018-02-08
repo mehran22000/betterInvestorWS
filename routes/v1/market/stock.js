@@ -93,17 +93,17 @@ router.get('/symbols/version/:version', function(req, res) {
 	// Find the latest symbols file version
     db.collection('configurations').findOne({'key':'symbols_version'},function (err, doc) {
         // Skip if the client symbol list is up-to-date
-        if  (doc.value ==  req.params.version){
+        let cur_ver = doc.value;
+        if  (cur_ver ==  req.params.version){
             msg = 'symbol list is up-to-date'
-        	res.json({'status':'200','symbols':'[]', 'msg':msg});
+        	res.json({'status':'204','symbols':'[]', 'msg':msg});
         	console.log(msg);
         }
         // Else return the full symbol list
         else {
         	db.collection('symbols').find().toArray(function (err, items) {
         	    msg = 'update local symbols';
-        		res.json({'status':'200','symbols':items, 'msg':msg});
-        		console.log(msg);
+        		res.json({'status':'200','symbols':items, 'msg':msg,'version':cur_ver});
         	});
     	}
     	
@@ -217,6 +217,44 @@ router.get('/quote/array/:array', function(req, res) {
     	res.json({'status':'200','data':res_price_dic});
     })
 });
+
+
+router.post('/updateSymbols', function (req, res){
+
+	var file_symbols = require('./symbols_us.json');
+	var _db;
+	var new_symbols_array = new Array();
+	
+	mongoClient.connectAsync(req.db_url)  
+    .then(function(db) {
+    	_db = db;
+    	return _db.collection('symbols').find().toArray();
+    })
+	
+	.then(function(symbols){
+		
+		for (var i in file_symbols) {
+				var found = false;
+				for (var j in symbols){
+					 if (file_symbols[i].Symbol == symbols[j].Symbol){
+						found = true;
+					 }
+				}
+				if (found == false) {
+					var new_symbol = {'Symbol': file_symbols[i].Symbol, 'Name':file_symbols[i].Name};
+					new_symbols_array.push(new_symbol)
+				}
+		}
+		
+		return _db.collection('symbols').insert(new_symbols_array);	
+	})
+	
+	.then(function(result){
+		res.json({'status':'200','data':'updating symbols table'});
+	})
+
+});
+
 
 
 module.exports = router;

@@ -7,14 +7,23 @@ var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 /* Get user portfolio */
 router.get('/:user_id', function(req, res) {   
 	var db_url = req.db_url;
-	
+	var db;
+	var portfolio;
 	mongoClient.connectAsync(db_url)  
-    .then(function(db) {      
+    .then(function(_db) {      
+        db = _db;
         return db.collection('portfolio').find({'user_id':req.params.user_id}).toArray();
     })
-    .then(function(portfolio) {
-		res.json({'status':'200','data':portfolio});
+    .then(function(_portfolio) {
+    	portfolio = _portfolio;
+    	return db.collection('users').findOne({'user_id':req.params.user_id});
+		
     })
+     .then(function(user) {
+    	var cash = user.cash;
+    	res.json({'status':'200','data':portfolio,'cash':cash});
+    })
+    
     .catch(function(err) {
         throw err;
         return res.send({'status':'500','response':'error','msg':'generic error'});
@@ -31,10 +40,12 @@ router.post('/', function(req, res) {
 	var db = req.db;
 	var user_id = req.body.user_id;
 	var symbol = req.body.symbol;
+	var name = req.body.name;
+
 	var qty = parseInt(req.body.qty);
 	var price = parseFloat(req.body.price);
 	var fee = parseFloat(req.body.fee);
-
+	
 	var is_new_pos = true;
 	var cost = qty * price + fee; 
 	var db_url = req.db_url;
@@ -90,7 +101,7 @@ router.post('/', function(req, res) {
 		}
 		
 		console.log('7.insert the new or updated pos');	
-    	new_pos = {"user_id":user_id,"symbol":symbol,"qty":qty,"cost":cost}
+    	new_pos = {"user_id":user_id,"symbol":symbol,"qty":qty,"cost":cost,"name":name}
     	return (_db.collection('portfolio').insert(new_pos));
     })      
 	
@@ -155,6 +166,8 @@ router.put('/', function(req, res) {
 	var db = req.db;
 	var user_id = req.body.user_id;
 	var symbol = req.body.symbol;
+	var name = req.body.name;
+	
 	var qty = parseInt(req.body.qty);
 	var price = parseFloat(req.body.price);
 	var fee = parseFloat(req.body.fee);
@@ -190,7 +203,7 @@ router.put('/', function(req, res) {
 		    	new_qty = pos.qty - qty;  
 		    	if (qty > 0) {
 					console.log('3.insert the updated pos');	
-    				new_pos = {"user_id":user_id,"symbol":symbol,"qty":new_qty,"cost":new_cost}
+    				new_pos = {"user_id":user_id,"symbol":symbol,"qty":new_qty,"cost":new_cost,"name":name}
     				return (_db.collection('portfolio').insert(new_pos));	
 				}
 		}
