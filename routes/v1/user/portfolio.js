@@ -9,6 +9,11 @@ router.get('/:user_id', function(req, res) {
 	var db_url = req.db_url;
 	var db;
 	var portfolio;
+	var cash;
+	var gain, gain_pct;
+	var rank_global;
+	var rank_friends;
+	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
         db = _db;
@@ -19,9 +24,19 @@ router.get('/:user_id', function(req, res) {
     	return db.collection('users').findOne({'user_id':req.params.user_id});
 		
     })
-     .then(function(user) {
-    	var cash = user.cash;
-    	res.json({'status':'200','data':portfolio,'cash':cash});
+    
+    .then(function(_user) {
+    	cash = _user.cash;
+    	return db.collection('rankings').findOne({'user_id':req.params.user_id});
+		
+    })
+    
+    .then(function(ranking) {
+    	console.log(ranking); 
+    	gain = ranking.gain;
+    	gain_pct = ranking.gain_pct;
+    	rank_global = ranking.rank_global;
+    	res.json({'status':'200','data': {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global}});
     })
     
     .catch(function(err) {
@@ -261,6 +276,207 @@ router.put('/', function(req, res) {
 		}			
 	});
 });
+
+
+// Get Gains
+router.get('/gains/:user_id', function(req, res) {   
+	var db_url = req.db_url;
+	var user_id = req.params.user_id;
+	
+	mongoClient.connectAsync(db_url)  
+    .then(function(_db) {      
+        db = _db;
+        return db.collection('gains').findOne({'user_id':user_id});
+    })
+    
+    .then(function(result) {
+    	res.json({'status':'200','data': {'user_id':user_id,'gain':result.gain}});
+    })
+    
+    .catch(function(err) {
+        throw err;
+        return res.send({'status':'500','response':'error','msg':'generic error'});
+    })
+    
+    .finally(function() {
+    	if (req.db) {
+    		req.db.close();
+    	}
+	})
+});
+	
+	
+// Get Rankings Global
+router.get('/rankings/global/:user_id/count/:count', function(req, res) {   
+	var db_url = req.db_url;
+	var user_id = req.params.user_id;
+	var count = req.params.count;
+	var rankings = [];
+	var users = [];
+	var result = [];
+	
+	mongoClient.connectAsync(db_url)  
+    .then(function(_db) {      
+        db = _db;
+        return db.collection('rankings').find().toArray();
+    })
+    
+    .then(function(_ranking) {      
+        rankings = _ranking;
+        return db.collection('users').find().toArray();
+    })
+    
+    
+    .then(function(_users) {
+    	users = _users;
+    	
+    	var rank_index = find_user_index(rankings,user_id);
+    	
+    	// If no ranking record is found, return the top list up to count
+    	if (rank_index < 0) {
+    		rank_index = 1;
+    	}
+    	
+    	var min_index = Math.max((rank_index - (parseInt(count)/2),0));
+    	var max_index = Math.min(min_index + count, users.length);
+    	
+    	console.log('rank_index='+rank_index + " ,min_idex=" + min_index + " ,max_index="+ max_index);
+    	
+    	for (var rank_index=min_index; rank_index < max_index; rank_index++)
+    	{
+    		var user_index = find_user_index(users,rankings[rank_index].user_id);
+    		var rank = {};
+    		rank.user_id = rankings[rank_index].user_id;
+    		rank.gain = rankings[rank_index].gain;
+    		rank.gain_pct = rankings[rank_index].gain_pct;
+    		rank.photo_url = users[user_index].photo_url;
+    		rank.rank_global = rank_index;
+    		rank.first_name = users[user_index].first_name;
+    		rank.last_name = users[user_index].last_name;
+    		result.push(rank);
+    	}
+    	
+    	return res.send({'status':'200','data':{'ranking':result}});
+    	
+    })
+    
+    .catch(function(err) {
+        throw err;
+        return res.send({'status':'500','response':'error','msg':'generic error'});
+    })
+    
+    .finally(function() {
+    	if (req.db) {
+    		req.db.close();
+    	}
+	})
+});	
+
+
+// Get Rankings Friends
+router.get('/rankings/friends/:user_id', function(req, res) {   
+	var db_url = req.db_url;
+	var user_id = req.params.user_id;
+	var rankings = [];
+	var users = [];
+	var result = [];
+
+	mongoClient.connectAsync(db_url)  
+    .then(function(_db) {      
+        db = _db;
+        return db.collection('rankings').find().toArray();
+    })
+    
+    .then(function(_ranking) {      
+        rankings = _ranking; 
+        return db.collection('users').find().toArray();
+    })
+    
+    
+    .then(function(_users) {
+    	users = _users;
+    	  
+    	// Locate user in rankings array	
+    	var user_index = find_user_index(users,user_id);
+    	var user_friends_str = users[user_index].friends;
+    	
+    	
+    	if (user_friends_str == null) {
+    		return res.send({'status':'200','data':{'ranking':result}});
+    	}
+    	else {
+    		var user_friends_array = user_friends_str.split(',');
+    		var friends_no = user_friends_array.length;
+    	
+    		var index = 0;
+    		var user_friends_str_sync = ',' + user_friends_str + ',';
+    		for (var u in users)
+    		{
+    			var search_key = ',' + users[u].user_id + ',';
+    			if ((user_friends_str_sync.indexOf(search_key) !== -1) && (index < friends_no)) {
+    			
+    				// Increase index
+    				index = index + 1;
+    			
+    				// Locate user friend in rankings array
+    				var friend_rank_index = find_user_index(rankings,users[u].user_id);
+    	
+    				// Create user rank object
+    				var user_rank = {};
+    				user_rank.user_id   = users[u].user_id;
+    		    	user_rank.photo_url = users[u].photo_url;
+    		    	user_rank.first_name = users[u].first_name;
+    		    	user_rank.last_name = users[u].last_name;
+    				user_rank.gain = rankings[friend_rank_index].gain;
+    		    	user_rank.gain_pct = rankings[friend_rank_index].gain_pct;
+    		    	user_rank.rank_global = rankings[friend_rank_index].rank_global;
+    		    	// Add to the result
+    				result.push(user_rank);
+    			} 
+    		}
+    		
+    		// Sort the result
+    		result.sort(function (a, b) {
+  				return b.gain_pct - a.gain_pct;
+			})
+    		return res.send({'status':'200','data':{'ranking':result}});
+    	}
+    	
+    })
+    
+    .catch(function(err) {
+        throw err;
+        return res.send({'status':'500','response':'error','msg':'generic error'});
+    })
+    
+    .finally(function() {
+    	if (req.db) {
+    		req.db.close();
+    	}
+	})
+});	
+
+
+function find_user_index(users_array,_user_id){
+
+	for (var a in users_array) {
+		if (users_array[a].user_id == _user_id) {
+			return a;
+		}
+	}
+	return -1;
+}
+
+function find_user_ranking(ranking_array,_user_id){
+
+	for (var r in ranking_array) {
+		if (ranking_array[r] == _user_id) {
+			return parseInt(r)+1;
+		}
+	}
+	return -1;
+}
+
 
 
 			

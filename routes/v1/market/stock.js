@@ -30,12 +30,14 @@ function updateStockPrice(){
 		for (var i in stocks){
 			var symbol = stocks[i].symbol;
 			url = base_url + 'query?function=TIME_SERIES_INTRADAY&symbol='+symbol+'&interval=1min&apikey='+api_key;
-			
+			var index = 0;
     		request.get(url, (error, response, body) => {
     		    if (error){
     		    	console.log(error);
+    		    	index = index + 1;
     		    }
     		    else {
+    		    	index = index + 1;
     		    	if ((body.indexOf('Time Series') !== -1 )) {
     		    		let data = JSON.parse(body);
   						let time_series = data['Time Series (1min)'];
@@ -45,16 +47,11 @@ function updateStockPrice(){
   								var keys = [];
   								for(var k in time_series) keys.push(k);
   								let res_price = time_series[keys[0]]['4. close'];
+ 								
  								if (res_price > 0){
  									var date = new Date().toISOString();
-  									var new_price = {'symbol':res_symbol,'price':res_price, 'date_time':date}
-  									_db.collection('stock_price').remove({'symbol':res_symbol}, function(err, result){
-  										_db.collection('stock_price').insert(new_price, function(err, result){
-        									if (err == null) {
-        										console.log('price for ' + res_symbol + ' is ' + new_price.price);
-        									}
-  										})	
-  									})
+  									stocks = update_price(stocks, res_symbol, res_price, date);
+  									console.log('updated price for ' + res_symbol + ' is ' + res_price + ' at ' + date);
   								}
   								else console.log('Invalid Response: res_price');
   							}		
@@ -63,11 +60,31 @@ function updateStockPrice(){
   						else console.log('Invalid Response: time_series');	
   					}
 				}
+				if (index == stocks.length) {
+						_db.collection('stock_price').remove({}, function(err, result){
+  							_db.collection('stock_price').insert(stocks, function(err, result){
+        						if (err == null) {
+        							console.log('stock price updated');
+        						}
+  							})	
+  						})
+				}
 			})
 		}
 	})
 }
 
+
+function update_price(stocks, symbol, new_price, new_date_time) {
+
+	for (var s in stocks){
+		if (stocks[s].symbol == symbol) {
+			stocks[s].price = new_price;
+			stocks[s].date_time = new_date_time;
+			return stocks;
+		}	
+	}
+}
 
 
 /* GET the latest Stock price. */
@@ -254,6 +271,18 @@ router.post('/updateSymbols', function (req, res){
 	})
 
 });
+
+function find_user_index(users_array,_user_id){
+
+	for (var a in users_array) {
+		if (users_array[a].user_id == _user_id) {
+			return a;
+		}
+	}
+	return -1;
+}
+
+
 
 
 
