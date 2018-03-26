@@ -53,7 +53,6 @@ router.get('/:symbol/global/:global/userid/:userid', function(req, res) {
 			
 		for (var h in holders)
     	{
-    		console.log(holders[h]);
     		var user_index = find_user_index(users,holders[h].user_id);
     		var rank_index = find_user_index(rankings,holders[h].user_id);
     		if (user_index >= 0) {
@@ -83,7 +82,7 @@ router.get('/:symbol/global/:global/userid/:userid', function(req, res) {
     	results.sort(function (a, b) {
   			return a.global_ranking - b.global_ranking;
 		});
-    	
+    	console.log(results);
     	return res.send({'status':'200','data':{'holders':results}});
 	})
 
