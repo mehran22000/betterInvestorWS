@@ -121,7 +121,12 @@ function update_rankings(_rankings) {
     })
 
 	.then(function(result){
-		return _db.collection('rankings').insert(_rankings);
+		if (_rankings.count > 0) {
+			return _db.collection('rankings').insert(_rankings);
+		}
+		else {
+			return true;
+		}
 	})
 	
 	.then(function(result){
@@ -172,7 +177,13 @@ function update_gains(_rankings) {
 
 
 	.then(function(result){
-		return _db.collection('gains').insert(gain_array);
+	
+		if (gain_array.count > 0) {
+			return _db.collection('gains').insert(gain_array);
+		}
+		else {
+			return true;
+		}
 	})
 	
 	.then(function(result){

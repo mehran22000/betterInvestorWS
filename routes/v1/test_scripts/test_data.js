@@ -52,6 +52,37 @@ router.post('/users/', function(req, res) {
 });
 
 
+router.put('/users/', function(req, res) {
+	
+	var real_users = [];
+	
+	mongoClient.connectAsync(db_url)  
+    .then(function(db) {
+    	_db = db;
+    	return _db.collection('users').find().toArray();
+    })
+    
+    .then(function(users) {
+    	for (var u in users) {
+			if (u.user_id > 1000) {
+    			real_users.push(users[u])
+    		}
+    	}
+    	return _db.collection('users').remove();
+    })
+            
+    .then(function(result) {
+    	return _db.collection('users').insert(real_users);
+    })
+	
+	.then(function(result) {
+    	console.log('test users removed');
+    	res.json({'status':'200','response':'success'});
+    })
+});
+
+
+
 // 2. Add Test Positions for each user
 
 router.post('/portfolio/', function(req, res) {
@@ -120,6 +151,10 @@ router.put('/portfolio/', function(req, res) {
     	res.json({'status':'200','response':'success'});
     })
 });
+
+
+
+
 
 
 

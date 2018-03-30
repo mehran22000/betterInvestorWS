@@ -238,7 +238,7 @@ router.get('/quote/array/:array', function(req, res) {
 
 router.post('/updateSymbols', function (req, res){
 
-	var file_symbols = require('./symbols_us.json');
+	var file_symbols = require('./symbols_nyq.json');
 	var _db;
 	var new_symbols_array = new Array();
 	

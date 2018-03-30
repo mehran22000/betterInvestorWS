@@ -10,9 +10,9 @@ router.get('/:user_id', function(req, res) {
 	var db;
 	var portfolio;
 	var cash;
-	var gain, gain_pct;
-	var rank_global;
-	var rank_friends;
+	var gain = 0, gain_pct = 0;
+	var rank_global = 0;
+	var rank_friends = 0;
 	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
@@ -24,7 +24,6 @@ router.get('/:user_id', function(req, res) {
     	return db.collection('users').findOne({'user_id':req.params.user_id});
 		
     })
-    
     .then(function(_user) {
     	cash = _user.cash;
     	return db.collection('rankings').findOne({'user_id':req.params.user_id});
@@ -32,10 +31,14 @@ router.get('/:user_id', function(req, res) {
     })
     
     .then(function(ranking) {
-    	console.log(ranking); 
-    	gain = ranking.gain;
-    	gain_pct = ranking.gain_pct;
-    	rank_global = ranking.rank_global;
+    	
+    	if (ranking != null) {
+    		gain = ranking.gain;
+    		gain_pct = ranking.gain_pct;
+    		rank_global = ranking.rank_global;
+    	}
+    	
+    	
     	res.json({'status':'200','data': {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global}});
     })
     
