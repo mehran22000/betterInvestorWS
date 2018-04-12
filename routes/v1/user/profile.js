@@ -22,17 +22,21 @@ router.post('/', function(req, res) {
 	var add_users = [];
 	var updated_users = [];
 	
+	var is_new_user = false;
+	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
         db = _db;
         return db.collection('users').find().toArray();
     })
+    
     .then(function(_users) {
     	users = _users;
     	var user_index = find_user_index(users,user_id);
     	
     	// create a new record for a new user
     	if (user_index < 0) {
+    		is_new_user = true;
     		var new_user = {"user_id":user_id,"email":email,"first_name":first_name,"last_name":last_name,"photo_url":photo_url,"friends":friends,"cash":cash,"credit":cash}
     		add_users.push(new_user);
     	}
@@ -67,10 +71,7 @@ router.post('/', function(req, res) {
         			updated_users.push(users[friend_index]._id);
     			}
     		}
-    	}
-    	
-    	console.log('arrays ready');
-    	
+    	}    	
     	return db.collection('users').remove(({'_id':{'$in':updated_users}}));
     })
 

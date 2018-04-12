@@ -7,6 +7,7 @@ var schedule = require('node-schedule');
 const sortBy = require('sort-array');
 var market;
 var _db;
+var positive_gain_users;
 /* scheduler to get the latest stock price every minute */
 
 /*
@@ -23,6 +24,8 @@ calculate_gain_ranking();
 function calculate_gain_ranking(){
 	var users, portfolio;
 	var ranking_array = [];
+	positive_gain_users = 0;
+	
 	mongoClient.connectAsync(db_url)  
     
     .then(function(db) {
@@ -57,6 +60,11 @@ function calculate_gain_ranking(){
 			}
 			var gain_pct = gain / users[u].credit;				
 			dic_user_gain[users[u].user_id] = gain_pct;
+			
+			if (gain > 0) {
+				positive_gain_users = positive_gain_users + 1; 
+			}
+			
 			ranking_array.push({'user_id':users[u].user_id,'gain':gain.toFixed(2), 'gain_pct':gain_pct.toFixed(4)});
 		}
     	
@@ -188,9 +196,28 @@ function update_gains(_rankings) {
 	
 	.then(function(result){
 		console.log('gains table updated!');
+		update_analytics();
 	})
 
 }
+
+
+function update_analytics(){
+	
+	mongoClient.connectAsync(db_url)  
+    .then(function(db) {
+    	_db = db;
+    	return _db.collection('stats').remove();
+    })
+    
+    .then(function(result){
+		return _db.collection('stats').insert({'positive_gain_users':positive_gain_users});
+	})
+	.then(function(result){
+		console.log('stats update updated!');
+	})
+}
+
 
 
 function find_gain_index (_gains, _user_id){

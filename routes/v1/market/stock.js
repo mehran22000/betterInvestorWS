@@ -89,17 +89,63 @@ function update_price(stocks, symbol, new_price, new_date_time) {
 
 /* GET the latest Stock price. */
 router.get('/quote/:symbol', function(req, res) {   
+	
 	const request = require("request");
 	var url = base_url + 'query?function=TIME_SERIES_INTRADAY&symbol='+req.params.symbol+'&interval=1min&apikey='+api_key;
 	console.log(url);
-	request.get(url, (error, response, body) => {
-  		let data = JSON.parse(body);
-  		let time_series = data['Time Series (1min)'];
-  		var keys = [];
-  		for(var k in time_series) keys.push(k);
-  		let price = time_series[keys[0]]['4. close'];
-  		res.json({'status':'200','symbol':req.params.symbol,'price':price,'date':keys[0]});
-	});
+	var _db;
+	var res_price_dic = {};
+	var symbol = req.params.symbol;
+		
+	mongoClient.connectAsync(req.db_url)  
+    .then(function(db) {
+    	_db = db;
+    	return _db.collection('stock_price').findOne({'symbol':symbol});
+    })
+	
+	.then(function(record){
+		if (record) {
+			res_price_dic[symbol]=record.price;
+    		res.json({'status':'200','data':res_price_dic});
+    	}
+    	else {
+    		request.get(url, (error, response, body) => {
+    		
+  				if ((body.indexOf('Time Series') !== -1 )) {
+    		    	let data = JSON.parse(body);
+  					let time_series = data['Time Series (1min)'];
+  					if (time_series){
+  						let res_symbol = data['Meta Data']['2. Symbol'];
+  						if (res_symbol){
+  							var keys = [];
+  							for(var k in time_series) keys.push(k);
+  							let res_price = time_series[keys[0]]['4. close'];
+ 								
+ 							if (res_price > 0){
+ 								res_price_dic[symbol]=res_price;
+    							res.json({'status':'200','data':res_price_dic});
+  							}
+  							else {
+  								console.log('Invalid Response: res_price');
+  								res.json({'status':'500','msg':'price is unavailable'});
+  							}
+  						}		
+  						else { 
+  							console.log('Invalid Response: res_symbol');
+  							res.json({'status':'500','msg':'price is unavailable'});
+  						}
+  					}
+  					else { 
+  						console.log('Invalid Response: time_series');
+  						res.json({'status':'500','msg':'price is unavailable'});	
+  					}
+  				}
+  				else {
+  					res.json({'status':'500','msg':'price is unavailable'});
+  				}
+  			})
+  		}	
+	});	
 });
 
 /* GET the stock symbol list */

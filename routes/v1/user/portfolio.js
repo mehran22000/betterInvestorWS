@@ -11,8 +11,7 @@ router.get('/:user_id', function(req, res) {
 	var portfolio;
 	var cash;
 	var gain = 0, gain_pct = 0;
-	var rank_global = 0;
-	var rank_friends = 0;
+	var rank_global;
 	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
@@ -36,12 +35,23 @@ router.get('/:user_id', function(req, res) {
     		gain = ranking.gain;
     		gain_pct = ranking.gain_pct;
     		rank_global = ranking.rank_global;
+    		return;
     	}
-    	
-    	
-    	res.json({'status':'200','data': {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global}});
+    	// for new user, their global rank will be based on num of user with positive return
+    	else {
+    		return db.collection('stats').findOne();
+    	}
     })
     
+    .then(function(_stats) {
+		
+		if (rank_global == null) {
+    		rank_global = _stats.positive_gain_users + 1;
+    	}
+		
+		res.json({'status':'200','data': {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global}});
+	})
+	
     .catch(function(err) {
         throw err;
         return res.send({'status':'500','response':'error','msg':'generic error'});
@@ -83,7 +93,7 @@ router.post('/', function(req, res) {
         console.log(profile);
         console.log('2.check the cash balance:'+profile.cash + ' cost:'+cost);
     	if (profile.cash < cost) {
-    		errCode = 501;
+    		errCode = '501';
     		errMsg = 'insufficient funds';
     		throw new Error(errCode);
     	}
@@ -160,7 +170,7 @@ router.post('/', function(req, res) {
 		
 	.catch(function(err) {
         if (!errCode){
-        	errCode = 500;
+        	errCode = '500';
         	errMsg = 'generic error';
         }
         
@@ -293,7 +303,13 @@ router.get('/gains/:user_id', function(req, res) {
     })
     
     .then(function(result) {
-    	res.json({'status':'200','data': {'user_id':user_id,'gain':result.gain}});
+    
+    	if (result != null) {
+    		res.json({'status':'200','data': {'user_id':user_id,'gain':result.gain}});
+    	}
+    	else {
+    		res.json({'status':'200','data': {'user_id':user_id,'gain':[]}})
+    	}
     })
     
     .catch(function(err) {
