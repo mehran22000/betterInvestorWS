@@ -229,7 +229,7 @@ router.put('/', function(req, res) {
     			cur_pos = pos;
 		    	new_cost = pos.cost * (1  - qty/pos.qty)
 		    	new_qty = pos.qty - qty;  
-		    	if (qty > 0) {
+		    	if (new_qty > 0) {
 					console.log('3.insert the updated pos');	
     				new_pos = {"user_id":user_id,"symbol":symbol,"qty":new_qty,"cost":new_cost,"name":name}
     				return (_db.collection('portfolio').insert(new_pos));	
