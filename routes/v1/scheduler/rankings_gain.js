@@ -189,7 +189,7 @@ function update_gains(_rankings) {
 
 	.then(function(result){
 	
-		if (gain_array.count > 0) {
+		if (gain_array.length > 0) {
 			return _db.collection('gains').insert(gain_array);
 		}
 		else {
