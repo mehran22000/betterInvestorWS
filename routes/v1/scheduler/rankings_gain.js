@@ -10,13 +10,15 @@ var _db;
 var positive_gain_users;
 /* scheduler to get the latest stock price every minute */
 
-
+/*
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update ranking ' + date);
   calculate_gain_ranking();
 });
+*/
 
+calculate_gain_ranking();
 
 
 
@@ -107,6 +109,7 @@ function calculate_gain_ranking(){
     		}
     	}
 		*/	
+		console.log(ranking_array);
     	update_rankings(ranking_array);
     })
 }
@@ -128,7 +131,8 @@ function update_rankings(_rankings) {
     })
 
 	.then(function(result){
-		if (_rankings.count > 0) {
+	    console.log(_rankings.length);
+		if (_rankings.length > 0) {
 			return _db.collection('rankings').insert(_rankings);
 		}
 		else {
