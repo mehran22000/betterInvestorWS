@@ -10,15 +10,15 @@ var _db;
 var positive_gain_users;
 /* scheduler to get the latest stock price every minute */
 
-/*
+
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update ranking ' + date);
   calculate_gain_ranking();
 });
-*/
 
-calculate_gain_ranking();
+
+// calculate_gain_ranking();
 
 
 

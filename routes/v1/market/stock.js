@@ -1,13 +1,15 @@
 var express = require('express');
 var router = express.Router();
 var api_key = 'T7IA9S7QELE0FLVH'; 
-var base_url = 'https://www.alphavantage.co/'
+// var base_url = 'https://www.alphavantage.co/'
+var iextrading_url = 'https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1'
 var Promise = require('bluebird');
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var schedule = require('node-schedule');
 
 /* scheduler to get the latest stock price every minute */
+
 
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
@@ -16,6 +18,10 @@ var j = schedule.scheduleJob('* * * * *', function(){
 });
 
 
+
+
+
+/*
 function updateStockPrice(){
 	const request = require("request");
 	var url;
@@ -73,12 +79,65 @@ function updateStockPrice(){
 		}
 	})
 }
+*/
 
+
+function updateStockPrice(){
+	
+	console.log('updateStockPrice started');
+	
+	const request = require("request");
+	var url;
+	
+	
+	mongoClient.connectAsync(db_url)  
+    .then(function(db) {
+    	_db = db;
+    	return _db.collection('stock_price').find().toArray();
+    })
+	
+	.then(function(stocks){
+		var index = 0;
+		for (var i in stocks){
+			var symbol = stocks[i].symbol;
+			url = iextrading_url.replace('{symbol}',symbol);
+			request.get(url, (error, response, body) => {
+    		    if (error){
+    		    	console.log(error);
+    		    	index = index + 1;
+    		    }
+    		    else {
+    		    	let data = JSON.parse(body);
+    		    	let price = data['quote']['latestPrice'];
+    		    	let res_symbol = data['quote']['symbol'];		
+ 					if (price > 0){
+ 						var date = new Date().toISOString();
+  						stocks = update_price(stocks, res_symbol, price, date);
+  						console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
+  					}
+  					else {
+  						console.log('Invalid Response: res_price');
+  					}
+  					index = index + 1;
+				}
+				if (index == stocks.length) {
+						_db.collection('stock_price').remove({}, function(err, result){
+  							_db.collection('stock_price').insert(stocks, function(err, result){
+        						if (err == null) {
+        							console.log('stock price updated');
+        						}
+  							})	
+  						})
+				}
+			})
+		}
+	})
+}
 
 function update_price(stocks, symbol, new_price, new_date_time) {
 
 	for (var s in stocks){
-		if (stocks[s].symbol == symbol) {
+		if (stocks[s].symbol.toUpperCase() == symbol.toUpperCase()) {
 			stocks[s].price = new_price;
 			stocks[s].date_time = new_date_time;
 			return stocks;
