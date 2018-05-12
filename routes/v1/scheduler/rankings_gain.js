@@ -56,7 +56,8 @@ function calculate_gain_ranking(){
 					user_positions.push(portfolio[p]);
 					// calculate gain
 					var price = getStockPrice(portfolio[p].symbol);
-					gain = gain + (portfolio[p].qty * price - portfolio[p].cost);
+					gain = gain + (portfolio[p].qty * price - portfolio[p].cost); 
+					console.log('symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + gain);
 				}
 			}
 			var gain_pct = gain / users[u].credit;				
