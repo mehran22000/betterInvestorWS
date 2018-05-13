@@ -147,6 +147,7 @@ function update_price(stocks, symbol, new_price, new_date_time) {
 
 
 /* GET the latest Stock price. */
+/*
 router.get('/quote/:symbol', function(req, res) {   
 	
 	const request = require("request");
@@ -206,6 +207,41 @@ router.get('/quote/:symbol', function(req, res) {
   		}	
 	});	
 });
+*/
+
+router.get('/quote/:symbol', function(req, res) {   
+	
+	const request = require("request");
+	var url = iextrading_url.replace('{symbol}',req.params.symbol.toUpperCase());
+	var res_price_dic = {};
+	request.get(url, (error, response, body) => {
+    	if (error){
+    		console.log(error);
+    		res.json({'status':'500','msg':'price is unavailable'});
+    	}
+    	else {
+    		let data = JSON.parse(body);
+    		let price = data['quote']['latestPrice'];
+    		let res_symbol = data['quote']['symbol'];		
+ 			if (price > 0){
+ 				res_price_dic[symbol]=price;
+    			res.json({'status':'200','data':res_price_dic});
+    		}
+    		else {
+    			res.json({'status':'500','msg':'price is unavailable'});
+    		}
+		}
+	});
+});
+		
+	
+	
+	
+	
+
+
+
+
 
 /* GET the stock symbol list */
 router.get('/symbols/version/:version', function(req, res) {   

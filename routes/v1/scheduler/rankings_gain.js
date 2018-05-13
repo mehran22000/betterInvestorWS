@@ -257,7 +257,7 @@ function find_user_index(users_array,_user_id){
 
 function getStockPrice(symbol){	
 	for (var s in market) {
-		if (market[s].symbol === symbol){
+		if (market[s].symbol.toUpperCase() === symbol.toUpperCase()){
 			return market[s].price;
 		}
 	}
