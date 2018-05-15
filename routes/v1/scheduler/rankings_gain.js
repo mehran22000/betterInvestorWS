@@ -18,7 +18,7 @@ var j = schedule.scheduleJob('* * * * *', function(){
 });
 
 
-// calculate_gain_ranking();
+calculate_gain_ranking();
 
 
 
@@ -72,7 +72,7 @@ function calculate_gain_ranking(){
     	
     	// global rankings
     	ranking_array.sort(function (a, b) {
-  			return b.gain_pct - a.gain_pct;
+  			return a.gain_pct - b.gain_pct;
 		});
     	for (var r in ranking_array) {
     		ranking_array[r].rank_global = ranking_array.length - r; 
