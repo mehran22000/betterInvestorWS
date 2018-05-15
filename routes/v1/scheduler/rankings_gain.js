@@ -18,7 +18,7 @@ var j = schedule.scheduleJob('* * * * *', function(){
 });
 
 
-calculate_gain_ranking();
+//calculate_gain_ranking();
 
 
 
