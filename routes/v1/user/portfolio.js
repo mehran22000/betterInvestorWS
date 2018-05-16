@@ -10,6 +10,7 @@ router.get('/:user_id', function(req, res) {
 	var db;
 	var portfolio;
 	var cash;
+	var credit;
 	var gain = 0, gain_pct = 0;
 	var rank_global;
 	
@@ -25,6 +26,7 @@ router.get('/:user_id', function(req, res) {
     })
     .then(function(_user) {
     	cash = _user.cash;
+    	credit = _user.credit;
     	return db.collection('rankings').findOne({'user_id':req.params.user_id});
 		
     })
@@ -49,7 +51,7 @@ router.get('/:user_id', function(req, res) {
     		rank_global = _stats.positive_gain_users + 1;
     	}
 		
-		res.json({'status':'200','data': {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global}});
+		res.json({'status':'200','data': {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global, 'credit':credit}});
 	})
 	
     .catch(function(err) {
