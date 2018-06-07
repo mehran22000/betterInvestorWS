@@ -1,12 +1,12 @@
 var express = require('express');
+var mongo = require('mongoskin');
+var bodyParser = require('./node_modules/body-parser');
+
 var stock = require('./routes/v1/market/stock');
 var profile = require('./routes/v1/user/profile');
 var portfolio = require('./routes/v1/user/portfolio');
 var holders = require('./routes/v1/holders/stock');
 var test_data = require('./routes/v1/test_scripts/test_data');
-
-var mongo = require('mongoskin');
-var bodyParser = require('./node_modules/body-parser');
 var scheduler = require('./routes/v1/scheduler/rankings_gain');
 var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var db = mongo.db(db_url, {native_parser:true});
@@ -26,10 +26,15 @@ app.set('view engine', 'ejs');
 
 app.use(function(req, res, next){
   console.log(req.originalUrl);
-  req.db = db;
-  req.db_url = db_url;
-  res.set({'Access-Control-Allow-Origin': '*'});
-  next();
+  if(req.originalUrl === '/'){
+  	res.end('Unauthorized');
+  }
+  else {
+  	req.db = db;
+  	req.db_url = db_url;
+  	res.set({'Access-Control-Allow-Origin': '*'});
+  	next();
+  }
 });
 
 app.listen(app.get('port'), function() {
