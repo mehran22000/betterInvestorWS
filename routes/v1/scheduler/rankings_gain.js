@@ -1,34 +1,33 @@
 var express = require('express');
-var router = express.Router();
 var Promise = require('bluebird');
-var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
-var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var schedule = require('node-schedule');
 const sortBy = require('sort-array');
+
+var router = express.Router();
+var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
+var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var market;
 var _db;
+
+// analytics variables
 var positive_gain_users;
-/* scheduler to get the latest stock price every minute */
 
 
-var j = schedule.scheduleJob('* * * * *', function(){
+calculate_gain_ranking();
+
+/* scheduler to rank users daily */
+var j = schedule.scheduleJob('* * 6 * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update ranking ' + date);
   calculate_gain_ranking();
 });
-
-
-//calculate_gain_ranking();
-
-
 
 function calculate_gain_ranking(){
 	var users, portfolio;
 	var ranking_array = [];
 	positive_gain_users = 0;
 	
-	mongoClient.connectAsync(db_url)  
-    
+	mongoClient.connectAsync(db_url)      
     .then(function(db) {
     	_db = db;
     	return _db.collection('stock_price').find().toArray();
@@ -51,13 +50,14 @@ function calculate_gain_ranking(){
 		for (var u in users) {
 			var user_positions = [];
 			var gain = 0;
+			console.log('Calculate gain for user id =' +  users[u].user_id + ':'); 
 			for (var p in portfolio) {
 				if (users[u].user_id === portfolio[p].user_id){
 					user_positions.push(portfolio[p]);
 					// calculate gain
 					var price = getStockPrice(portfolio[p].symbol);
 					gain = gain + (portfolio[p].qty * price - portfolio[p].cost); 
-					console.log('symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + gain);
+					console.log('- symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + gain);
 				}
 			}
 			var gain_pct = gain / users[u].credit;				
@@ -77,40 +77,6 @@ function calculate_gain_ranking(){
     	for (var r in ranking_array) {
     		ranking_array[r].rank_global = ranking_array.length - r; 
     	}
-    	
-    	
-    	
-    	/*
-    	for (var r in ranking_array) {
-    		if ((ranking_array[r].friends != null) && (ranking_array[r].friends != '')){	
-    			var friends_array = ranking_array[r].friends.split(',');
-    			friends_array.push(ranking_array[r].user_id);
-    			
-    			// Clean Up Friends Array
-    			var active_friends = [];
-    			for (var f in friends_array) {
-    				if (dic_user_gain[friends_array[f]] != null) {
-    					active_friends.push(friends_array[f]);
-    				}  
-    			}
-    			
-    			friends_array = active_friends;
-    			for (var i=0; i< friends_array.length - 1; i++){
-    				for (var j = i+1; j< friends_array.length; j++) {
-    					console.log(dic_user_gain[friends_array[i]] + '<' + dic_user_gain[friends_array[j]] );
-    					if (dic_user_gain[friends_array[i]] < dic_user_gain[friends_array[j]]){
-    						var temp = friends_array[i];
-    						friends_array[i] = friends_array[j];
-    						friends_array[j] = temp;
-    					}
-    				}
-    			}
-    				
-    		ranking_array[r].friends = friends_array.toString();
-    		}
-    	}
-		*/	
-		console.log(ranking_array);
     	update_rankings(ranking_array);
     })
 }
@@ -121,31 +87,25 @@ function calculate_gain_ranking(){
 
 function update_rankings(_rankings) {
 	
-	var gain_array = [];
-	var date = new Date();
-	
-	// Clear Rankings Table
-	mongoClient.connectAsync(db_url)  
-    .then(function(db) {
-    	_db = db;
-    	return _db.collection('rankings').remove();
-    })
+	if (_rankings.length > 0 ) {
+		// Clear Rankings Table
+		mongoClient.connectAsync(db_url)  
+    	.then(function(db) {
+    		_db = db;
+    		return _db.collection('rankings').remove();
+    	})
 
-	.then(function(result){
-	    console.log(_rankings.length);
-		if (_rankings.length > 0) {
+		.then(function(result){
+			console.log('rankings table reset.');
 			return _db.collection('rankings').insert(_rankings);
-		}
-		else {
-			return true;
-		}
-	})
-	
-	.then(function(result){
-		console.log('rankings table updated!');
-		update_gains(_rankings);
-	})
-
+		})
+		.then(function(result){
+			console.log('rankings table updated.');
+			console.log(_rankings);
+			// Next step is to update the gains table
+		    update_gains(_rankings);
+		})
+	}
 } 
 
 
@@ -166,10 +126,10 @@ function update_gains(_rankings) {
 		for (var u in _rankings) {
     		var i = find_gain_index (gains, _rankings[u].user_id);
     		if (i >= 0) {
-    			var gain_str = gains[i].gain;
-    			var new_gain = gain_str.includes(date.yyyymmdd());
     			var gain;
-    			if (new_gain == false) {
+    			var gain_str = gains[i].gain;
+    			var today_gain = gain_str.includes(date.yyyymmdd());
+    			if (today_gain == false) {
     				gain_str = gain_str + ',{'+ date.yyyymmdd() +':'+ (_rankings[u].gain_pct)+'}'	
     				gain = {'user_id': _rankings[u].user_id,'gain':gain_str};
     			}
@@ -184,23 +144,35 @@ function update_gains(_rankings) {
     			gain_array.push(gain);
     		}
     	}
-    	return _db.collection('gains').remove();
+    	
+    	if (gain_array.length >= gains.length) {
+    		return _db.collection('gains').remove();
+    	}
+    	else {
+    		console.log('Error: gain_array is not completed.');
+    		console.log('updated gain_array is:');
+    		console.log(gain_array);
+    		console.log('previous gain_array is');
+    		console.log(gains);
+    		return true;
+    	}
 	})
 
 
 	.then(function(result){
-	
-		if (gain_array.length > 0) {
-			return _db.collection('gains').insert(gain_array);
-		}
-		else {
-			return true;
-		}
+		console.log('gains table reset.');
+		return _db.collection('gains').insert(gain_array);
 	})
 	
 	.then(function(result){
-		console.log('gains table updated!');
+		console.log('gains table updated.');
+		console.log(gain_array);
+		// Next step is to update analytics
 		update_analytics();
+	})
+	
+	.catch(function (err) {
+		console.log(err);
 	})
 
 }
@@ -215,17 +187,22 @@ function update_analytics(){
     })
     
     .then(function(result){
+    	console.log('stats table reset.');
 		return _db.collection('stats').insert({'positive_gain_users':positive_gain_users});
 	})
 	.then(function(result){
-		console.log('stats update updated!');
+		console.log('stats table updated.');
+		console.log({'positive_gain_users':positive_gain_users});
+	})
+	
+	.catch(function (err) {
+		console.log(err);
 	})
 }
 
 
-
+/* Auxiliary functions */
 function find_gain_index (_gains, _user_id){
-
 	for (var g in _gains){
 	  	if (_gains[g].user_id == _user_id) {
 	  		return g;
@@ -235,7 +212,6 @@ function find_gain_index (_gains, _user_id){
 }
 
 function get_user_friends (_users, _user_id){
-
 	for (var u in _users){
 	  	if (_users[u].user_id == _user_id) {
 	  		return _users[u].friends;
@@ -245,7 +221,6 @@ function get_user_friends (_users, _user_id){
 }
 
 function find_user_index(users_array,_user_id){
-
 	for (var a in users_array) {
 		if (users_array[a].user_id == _user_id) {
 			return a;

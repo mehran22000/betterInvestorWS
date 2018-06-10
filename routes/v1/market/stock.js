@@ -1,17 +1,14 @@
 var express = require('express');
 var router = express.Router();
-var api_key = 'T7IA9S7QELE0FLVH'; 
-// var base_url = 'https://www.alphavantage.co/'
-var iextrading_url = 'https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1'
-var iextrading_symbol_url = 'https://api.iextrading.com/1.0/ref-data/symbols'
-var Promise = require('bluebird');
-var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var schedule = require('node-schedule');
+var Promise = require('bluebird');
+var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
+var iextrading_url = 'https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1'
+var iextrading_symbol_url = 'https://api.iextrading.com/1.0/ref-data/symbols'
+
 
 /* scheduler to get the latest stock price every minute */
-
-
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update stock price ' + date);
@@ -19,13 +16,14 @@ var j = schedule.scheduleJob('* * * * *', function(){
 });
 
 
+
 function updateStockPrice(){
 	
-	console.log('updateStockPrice started');
+	console.log('UpdateStockPrice started.');
 	
 	const request = require("request");
 	var url;
-	
+	var updated_quotes = new Map();
 	mongoClient.connectAsync(db_url)  
     .then(function(db) {
     	_db = db;
@@ -46,11 +44,12 @@ function updateStockPrice(){
     		    	let data = JSON.parse(body);
     		    	let price = data['quote']['latestPrice'];
     		    	let res_symbol = data['quote']['symbol'];
-    		    	let latestupdate = data['quote']['latestupdate'];		
+    		    	let latest_update = data['quote']['latestUpdate'];		
  					if (price > 0){
  						var date = new Date().toISOString();
-  						stocks = update_price(stocks, res_symbol, price, date, latestupdate);
-  						console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
+ 						updated_quotes.set(res_symbol, {'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
+  						// stocks = update_price(stocks, res_symbol, price, date, latest_update);
+  						// console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
   					}
   					else {
   						console.log('Invalid Response: res_price');
@@ -58,33 +57,63 @@ function updateStockPrice(){
   					index = index + 1;
 				}
 				if (index == stocks.length) {
+						
 						_db.collection('stock_price').remove({}, function(err, result){
-  							_db.collection('stock_price').insert(stocks, function(err, result){
+							_db.collection('stock_price').insert(Array.from(updated_quotes.values()), function(err, result){
         						if (err == null) {
-        							console.log('stock price updated');
-        						}
-  							})	
-  						})
+        							console.log('UpdateStockPrice finished.');
+        							console.log(Array.from(updated_quotes.values()));
+        					}
+  						})	
+  					})
 				}
 			})
 		}
 	})
 }
 
-function update_price(stocks, symbol, new_price, new_date_time, latestupdate) {
+/*
+function update_price(stocks, symbol, new_price, new_date_time, latestUpdate) {
 
 	for (var s in stocks){
 		if (stocks[s].symbol.toUpperCase() == symbol.toUpperCase()) {
 			stocks[s].price = new_price;
 			stocks[s].date_time = new_date_time;
-			stocks[s].latest_update = latestupdate;
+			stocks[s].latest_update = latestUpdate;
 			return stocks;
 		}	
 	}
 }
+*/
+
+/* GET the stock symbol list */
+/* App calls this api to update its stock list if there is a newer version' */
+router.get('/symbols/version/:version', function(req, res) {   
+	var db = req.db;
+	var res_price_dic = {};
+	
+	// Find the latest symbols file version
+    db.collection('configurations').findOne({'key':'symbols_version'},function (err, doc) {
+        // Skip if the client symbol list is up-to-date
+        let cur_ver = doc.value;
+        if  (cur_ver ==  req.params.version){
+            res_price_dic['symbols'] = [];
+        	res.json({'status':'204','data':res_price_dic});
+        }
+        // Else return the full symbol list
+        else {
+        	db.collection('symbols').find().toArray(function (err, items) {
+        		res_price_dic[symbols] = items;
+        		res_price_dic[version] = cur_ver;
+        		res.json({'status':'200','data':res_price_dic});
+        	});
+    	}
+    	
+    });
+});
 
 
-
+/* Get a single quote */
 router.get('/quote/:symbol', function(req, res) {   
 	const request = require("request");
 	var symbol = req.params.symbol.toUpperCase();
@@ -98,12 +127,12 @@ router.get('/quote/:symbol', function(req, res) {
     	else {
     		let data = JSON.parse(body);
     		let price = data['quote']['latestPrice'];
-    		let res_symbol = data['quote']['symbol'];		
- 			if (price > 0){
+    		if (price > 0){
  				res_price_dic[symbol]=price;
     			res.json({'status':'200','data':res_price_dic});
     		}
     		else {
+    			console.log('unexpected price response:' + price);
     			res.json({'status':'500','msg':'price is unavailable'});
     		}
 		}
@@ -111,47 +140,25 @@ router.get('/quote/:symbol', function(req, res) {
 });
 		
 	
-/* GET the stock symbol list */
-router.get('/symbols/version/:version', function(req, res) {   
-	var db = req.db;
-	var msg = '';
-	
-	// Find the latest symbols file version
-    db.collection('configurations').findOne({'key':'symbols_version'},function (err, doc) {
-        // Skip if the client symbol list is up-to-date
-        let cur_ver = doc.value;
-        if  (cur_ver ==  req.params.version){
-            msg = 'symbol list is up-to-date'
-        	res.json({'status':'204','symbols':'[]', 'msg':msg});
-        	console.log(msg);
-        }
-        // Else return the full symbol list
-        else {
-        	db.collection('symbols').find().toArray(function (err, items) {
-        	    msg = 'update local symbols';
-        		res.json({'status':'200','symbols':items, 'msg':msg,'version':cur_ver});
-        	});
-    	}
-    	
-    });
-});
 
+
+/* GET the latest stock price for a comma separated list of stocks */
 router.get('/quote/array/:array', function(req, res) {   
-	var req_symbols = req.params.array.split(',');
 	const request = require("request");
+	var req_symbols = req.params.array.split(',');
 	var res_price_dic = {};
 	var db_price_dic = {};
 	var unfound_array = [];
-	var _db;
+	var db = req.db;
 	var stocks = [];
 		
 	mongoClient.connectAsync(req.db_url)  
     .then(function(db) {
-    	_db = db;
-    	return _db.collection('stock_price').find().toArray();
+    	return db.collection('stock_price').find().toArray();
     })
 	
 	.then(function(db_price_array){
+		/* first search db to find the stock quote */
 		if (db_price_array) {
     		for (var i in db_price_array) {
     			db_price_dic[db_price_array[i].symbol] = {'price':db_price_array[i].price};
@@ -171,7 +178,6 @@ router.get('/quote/array/:array', function(req, res) {
     		// fetch stock price for unfound stocks and add them to the table
     		var index = 0;
 			for (var i in unfound_array){
-			console.log(unfound_array[i]);
 				var symbol = unfound_array[i];
 				url = iextrading_url.replace('{symbol}',symbol);
 				request.get(url, (error, response, body) => {
@@ -183,11 +189,11 @@ router.get('/quote/array/:array', function(req, res) {
     		    		let data = JSON.parse(body);
     		    		let price = data['quote']['latestPrice'];
     		    		let res_symbol = data['quote']['symbol'];
-    		    		let latestupdate = data['quote']['latestupdate'];		
+    		    		let latest_update = data['quote']['latestUpdate'];		
  							
  						if (price > 0){
  							var date = new Date().toISOString();
- 							stocks.push({'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latestupdate});
+ 							stocks.push({'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
   							res_price_dic[res_symbol] = price;
   							console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
   						}
@@ -197,8 +203,7 @@ router.get('/quote/array/:array', function(req, res) {
   						index = index + 1;
 					}
 					if (index == unfound_array.length) {
-						console.log(stocks);
-						_db.collection('stock_price').insert(stocks, function(err, result){
+						db.collection('stock_price').insert(stocks, function(err, result){
         					if (err == null) {
         						console.log('stock price updated');
         					}
@@ -216,6 +221,7 @@ router.get('/quote/array/:array', function(req, res) {
 });
 
 
+// post api to read symbols from a file and write it to a db table.
 router.post('/updateSymbols/file', function (req, res){
 
 	var file_symbols = require('./symbols.json');
@@ -253,6 +259,7 @@ router.post('/updateSymbols/file', function (req, res){
 });
 
 
+// post api to read symbol list for iextrading and write it to a local file.
 router.post('/updateSymbols/service', function (req, res){
 
     const request = require("request");
@@ -264,8 +271,8 @@ router.post('/updateSymbols/service', function (req, res){
 	url = iextrading_symbol_url;
 	request.get(url, (error, response, body) => {
     	if (error){
-    	    console.log(error);
-        	index = index + 1;
+        	console.log('symbols updated failed');
+        	console.log(error);
     	}
     	else {
     		let symbols = JSON.parse(body);
@@ -278,16 +285,13 @@ router.post('/updateSymbols/service', function (req, res){
   				_db.collection('symbols').insert(symbols_array, function(err, result){
         			if (err == null) {
         				console.log('symbols updated');
-        				res.json({'status':'200','data':'updating symbols table'});
-        				
         				let data = JSON.stringify(symbols_array);  
 						fs.writeFileSync('symbols_iex.json', data);  
-        				
-        				
+        				res.json({'status':'200','data':'updating symbols table'});
         			}
         			else {
         				console.log('symbols updated failed');
-        				res.json({'status':'500','data':'general error'});
+        				res.json({'status':'500','err':'general error'});
         			}
   				})	
   			})
@@ -295,224 +299,4 @@ router.post('/updateSymbols/service', function (req, res){
 	})
 });
 
-
-
-
-
-
-function find_user_index(users_array,_user_id){
-
-	for (var a in users_array) {
-		if (users_array[a].user_id == _user_id) {
-			return a;
-		}
-	}
-	return -1;
-}
-
 module.exports = router;
-
-
-/* GET the latest Stock price. */
-/*
-router.get('/quote/array/:array', function(req, res) {   
-	var req_symbols = req.params.array.split(',');
-	var db_price_dic = {};
-	var res_price_dic = {};
-
-	var dict = {};
-	var _db;
-		
-	mongoClient.connectAsync(req.db_url)  
-    .then(function(db) {
-    	_db = db;
-    	return _db.collection('stock_price').find().toArray();
-    })
-	
-	.then(function(db_price_array){
-    	if (db_price_array) {
-    		for (var i in db_price_array) {
-    			db_price_dic[db_price_array[i].symbol] = {'price':db_price_array[i].price,'date':db_price_array[i].date_time};
-    		}
-    	}
-    		
-    	// iterate over req_symbols
-    	var now  = new Date();
-    	var index = 0;
-    	var dateObj, validaDate;
-    	
-    	for (var i in req_symbols)	{
-    	    var rec = db_price_dic[req_symbols[i]]; 
-    	    var prvPriceFound = false;
-    		if (rec != null) {
-    			prvPriceFound = true;
-    			dateObj = new Date(rec.date);
-    			validDate = new Date(dateObj.setMinutes(dateObj.getMinutes() + 1));
-    		}
-    			
-    		if ((prvPriceFound === true) && (validDate > now)){
-    			console.log('price for' + req_symbols[i] + ' is ' + rec.price + ' and still valid');
-    			res_price_dic[req_symbols[i]] = rec.price;
-    			index = index + 1;
-    			if (index === req_symbols.length){
-  					res.json({'status':'200','data':res_price_dic});
-  				}			
-    		}
-    		else {
-    			console.log('invalid');
-    			url = base_url + 'query?function=TIME_SERIES_INTRADAY&symbol='+req_symbols[i]+'&interval=1min&apikey='+api_key;
-    			console.log(url);
-  				request.get(url, (error, response, body) => {
-  					let data = JSON.parse(body);
-  					let time_series = data['Time Series (1min)'];
-  					let res_symbol = data['Meta Data']['2. Symbol'];
-  					var keys = [];
-  					for(var k in time_series) keys.push(k);
-  					let res_price = time_series[keys[0]]['4. close'];
-  					dict[res_symbol] = res_price
- 					var date = new Date().toISOString();
-  					var new_price = {'symbol':res_symbol,'price':res_price, 'date_time':date}
-  					_db.collection('stock_price').remove({'symbol':res_symbol}, function(err, result){
-  						_db.collection('stock_price').insert(new_price, function(err, result){
-        					if (err == null) {
-        						console.log('price for ' + res_symbol + ' is ' + new_price + ' and still valid');
-        						res_price_dic[res_symbol] = res_price;
-        					}
-        					index = index + 1;
-  							if (index === req_symbols.length){
-  								res.json({'status':'200','data':res_price_dic});
-  							}
-  						})	
-  					})				
-    			}) 
-    		}
-    	}
-    })
-});
-*/
-
-
-
-
-/*
-function updateStockPrice(){
-	const request = require("request");
-	var url;
-	
-	mongoClient.connectAsync(db_url)  
-    .then(function(db) {
-    	_db = db;
-    	return _db.collection('stock_price').find().toArray();
-    })
-	
-	.then(function(stocks){
-		for (var i in stocks){
-			var symbol = stocks[i].symbol;
-			url = base_url + 'query?function=TIME_SERIES_INTRADAY&symbol='+symbol+'&interval=1min&apikey='+api_key;
-			var index = 0;
-    		request.get(url, (error, response, body) => {
-    		    if (error){
-    		    	console.log(error);
-    		    	index = index + 1;
-    		    }
-    		    else {
-    		    	index = index + 1;
-    		    	if ((body.indexOf('Time Series') !== -1 )) {
-    		    		let data = JSON.parse(body);
-  						let time_series = data['Time Series (1min)'];
-  						if (time_series){
-  							let res_symbol = data['Meta Data']['2. Symbol'];
-  							if (res_symbol){
-  								var keys = [];
-  								for(var k in time_series) keys.push(k);
-  								let res_price = time_series[keys[0]]['4. close'];
- 								
- 								if (res_price > 0){
- 									var date = new Date().toISOString();
-  									stocks = update_price(stocks, res_symbol, res_price, date);
-  									console.log('updated price for ' + res_symbol + ' is ' + res_price + ' at ' + date);
-  								}
-  								else console.log('Invalid Response: res_price');
-  							}		
-  							else  console.log('Invalid Response: res_symbol');
-  						}
-  						else console.log('Invalid Response: time_series');	
-  					}
-				}
-				if (index == stocks.length) {
-						_db.collection('stock_price').remove({}, function(err, result){
-  							_db.collection('stock_price').insert(stocks, function(err, result){
-        						if (err == null) {
-        							console.log('stock price updated');
-        						}
-  							})	
-  						})
-				}
-			})
-		}
-	})
-}
-*/
-
-/* GET the latest Stock price. */
-/*
-router.get('/quote/:symbol', function(req, res) {   
-	
-	const request = require("request");
-	var url = base_url + 'query?function=TIME_SERIES_INTRADAY&symbol='+req.params.symbol+'&interval=1min&apikey='+api_key;
-	console.log(url);
-	var _db;
-	var res_price_dic = {};
-	var symbol = req.params.symbol;
-		
-	mongoClient.connectAsync(req.db_url)  
-    .then(function(db) {
-    	_db = db;
-    	return _db.collection('stock_price').findOne({'symbol':symbol});
-    })
-	
-	.then(function(record){
-		if (record) {
-			res_price_dic[symbol]=record.price;
-    		res.json({'status':'200','data':res_price_dic});
-    	}
-    	else {
-    		request.get(url, (error, response, body) => {
-    		
-  				if ((body.indexOf('Time Series') !== -1 )) {
-    		    	let data = JSON.parse(body);
-  					let time_series = data['Time Series (1min)'];
-  					if (time_series){
-  						let res_symbol = data['Meta Data']['2. Symbol'];
-  						if (res_symbol){
-  							var keys = [];
-  							for(var k in time_series) keys.push(k);
-  							let res_price = time_series[keys[0]]['4. close'];
- 								
- 							if (res_price > 0){
- 								res_price_dic[symbol]=res_price;
-    							res.json({'status':'200','data':res_price_dic});
-  							}
-  							else {
-  								console.log('Invalid Response: res_price');
-  								res.json({'status':'500','msg':'price is unavailable'});
-  							}
-  						}		
-  						else { 
-  							console.log('Invalid Response: res_symbol');
-  							res.json({'status':'500','msg':'price is unavailable'});
-  						}
-  					}
-  					else { 
-  						console.log('Invalid Response: time_series');
-  						res.json({'status':'500','msg':'price is unavailable'});	
-  					}
-  				}
-  				else {
-  					res.json({'status':'500','msg':'price is unavailable'});
-  				}
-  			})
-  		}	
-	});	
-});
-*/
