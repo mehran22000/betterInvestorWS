@@ -8,7 +8,7 @@ var db = mongo.db(db_url, {native_parser:true});
 var stock = require('./routes/v1/market/stock');
 var profile = require('./routes/v1/user/profile');
 var portfolio = require('./routes/v1/user/portfolio');
-var holders = require('./routes/v1/holders/stock');
+var holders = require('./routes/v1/users/holders');
 var scheduler = require('./routes/v1/scheduler/rankings_gain');
 // var test_data = require('./routes/v1/test_scripts/test_data');
 
@@ -35,7 +35,7 @@ app.use(bodyParser.json());
 app.use('/services/v1/market/stock', stock);
 app.use('/services/v1/user/profile', profile);
 app.use('/services/v1/user/portfolio', portfolio);
-app.use('/services/v1/holders/stock', holders);
+app.use('/services/v1/users/holders', holders);
 // app.use('/services/v1/testscript/testdata', test_data);
 
 module.exports = app;
