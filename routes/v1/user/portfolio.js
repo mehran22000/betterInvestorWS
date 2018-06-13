@@ -39,7 +39,6 @@ router.get('/:user_id', function(req, res) {
     	return db.collection('rankings').findOne({'user_id':req.params.user_id});
 		
     })
-    
     .then(function(ranking) {
     	
     	if (ranking != null) {

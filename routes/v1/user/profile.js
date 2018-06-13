@@ -49,11 +49,9 @@ router.post('/', function(req, res) {
 	
 	
 	var cash = 20000;
-
 	var all_users = [];
 	var add_users = [];
 	var updated_users = [];
-	
 	var is_new_user = false;
 	
 	mongoClient.connectAsync(db_url)  
