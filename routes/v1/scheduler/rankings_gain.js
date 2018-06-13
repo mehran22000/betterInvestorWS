@@ -72,13 +72,17 @@ function calculate_gain_ranking(){
     	
     	// global rankings
     	ranking_array.sort(function (a, b) {
-  			return a.gain_pct - b.gain_pct;
+  			return b.gain_pct - a.gain_pct;
 		});
     	for (var r in ranking_array) {
-    		ranking_array[r].rank_global = ranking_array.length - r; 
+    		ranking_array[r].rank_global = Number(r) + 1; 
     	}
     	update_rankings(ranking_array);
     })
+    
+    .catch(function (err) {
+		console.log(err);
+	});
 }
 
 
@@ -105,6 +109,9 @@ function update_rankings(_rankings) {
 			// Next step is to update the gains table
 		    update_gains(_rankings);
 		})
+		.catch(function (err) {
+			console.log(err);
+		});
 	}
 } 
 

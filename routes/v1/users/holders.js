@@ -15,6 +15,28 @@ router.get('/:symbol/global/:global/userid/:userid', function(req, res) {
    var global = req.params.global;
    var user_id = req.params.userid;
    
+   /* parameters validation */	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (symbol === null) {
+		errCode = '400';
+    	errMsg = 'symbol parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+   
+   if ((global != 'false') || (global != 'true')) {
+		errCode = '400';
+    	errMsg = 'symbol parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+   
    var holders = [];
    var users = [];
    var rankings = [];
@@ -74,8 +96,9 @@ router.get('/:symbol/global/:global/userid/:userid', function(req, res) {
 		console.log(response);
     	return res.send(response);
 	})
-
-
+	.catch(function (err) {
+		console.log(err);
+	});
 });
 
 

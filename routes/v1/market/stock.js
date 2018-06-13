@@ -70,27 +70,27 @@ function updateStockPrice(){
 			})
 		}
 	})
+	.catch(function (err) {
+		console.log(err);
+	});
 }
 
-/*
-function update_price(stocks, symbol, new_price, new_date_time, latestUpdate) {
 
-	for (var s in stocks){
-		if (stocks[s].symbol.toUpperCase() == symbol.toUpperCase()) {
-			stocks[s].price = new_price;
-			stocks[s].date_time = new_date_time;
-			stocks[s].latest_update = latestUpdate;
-			return stocks;
-		}	
-	}
-}
-*/
 
 /* GET the stock symbol list */
 /* App calls this api to update its stock list if there is a newer version' */
 router.get('/symbols/version/:version', function(req, res) {   
 	var db = req.db;
 	var res_price_dic = {};
+	
+	/* parameters validation */	
+	if (!version || isNaN(version)) {
+		errCode = '400';
+    	errMsg = 'version parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
 	
 	// Find the latest symbols file version
     db.collection('configurations').findOne({'key':'symbols_version'},function (err, doc) {
@@ -99,6 +99,7 @@ router.get('/symbols/version/:version', function(req, res) {
         if  (cur_ver ==  req.params.version){
             res_price_dic['symbols'] = [];
         	res.json({'status':'204','data':res_price_dic});
+        	console.log('app symbols version ' + cur_ver + ' is current');
         }
         // Else return the full symbol list
         else {
@@ -106,6 +107,7 @@ router.get('/symbols/version/:version', function(req, res) {
         		res_price_dic[symbols] = items;
         		res_price_dic[version] = cur_ver;
         		res.json({'status':'200','data':res_price_dic});
+        		console.log('app symbols will be updated to ' + cur_ver + ' version');
         	});
     	}
     	
@@ -117,6 +119,15 @@ router.get('/symbols/version/:version', function(req, res) {
 router.get('/quote/:symbol', function(req, res) {   
 	const request = require("request");
 	var symbol = req.params.symbol.toUpperCase();
+	
+	// parameter validation
+	if (symbol === null) {
+		errCode = '400';
+    	errMsg = 'symbol parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
 	var url = iextrading_url.replace('{symbol}',symbol);
 	var res_price_dic = {};
 	request.get(url, (error, response, body) => {
@@ -145,7 +156,25 @@ router.get('/quote/:symbol', function(req, res) {
 /* GET the latest stock price for a comma separated list of stocks */
 router.get('/quote/array/:array', function(req, res) {   
 	const request = require("request");
+	
+	// parameter validation
+	if (array === null) {
+		errCode = '400';
+    	errMsg = 'array parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
 	var req_symbols = req.params.array.split(',');
+	
+	if (req_symbols === null) {
+		errCode = '400';
+    	errMsg = 'symbol parameter invalid format';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	
 	var res_price_dic = {};
 	var db_price_dic = {};
 	var unfound_array = [];
@@ -216,11 +245,13 @@ router.get('/quote/array/:array', function(req, res) {
     	else {
     		res.json({'status':'200','data':res_price_dic});
     	}
-    	
+    	console.log(res_price_dic);
     })
 });
 
 
+
+/* Auxiliary services */
 // post api to read symbols from a file and write it to a db table.
 router.post('/updateSymbols/file', function (req, res){
 

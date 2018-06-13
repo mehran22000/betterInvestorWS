@@ -14,6 +14,15 @@ router.get('/:user_id', function(req, res) {
 	var gain = 0, gain_pct = 0;
 	var rank_global;
 	
+	/* parameters validation */	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
         db = _db;
@@ -50,31 +59,69 @@ router.get('/:user_id', function(req, res) {
 		if (rank_global == null) {
     		rank_global = _stats.positive_gain_users + 1;
     	}
-		
-		res.json({'status':'200','data': {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global, 'credit':credit}});
+		var data = {'portfolio':portfolio,'cash':cash,'gain':gain,'gain_pct':gain_pct,'rank_global':rank_global, 'credit':credit};
+		console.log(data);
+		res.json({'status':'200','data': data});
 	})
 	
     .catch(function(err) {
         throw err;
+        console.log(err);
         return res.send({'status':'500','response':'error','msg':'generic error'});
     })
-    .finally(function() {
-    	if (req.db) {
-    		req.db.close();
-    	}
-	});
+    
 });
 
 /* POST buy a stock */
 router.post('/', function(req, res) {
 	var db = req.db;
+
+	/* parameters */
 	var user_id = req.body.user_id;
 	var symbol = req.body.symbol;
 	var name = req.body.name;
-
 	var qty = parseInt(req.body.qty);
 	var price = parseFloat(req.body.price);
 	var fee = parseFloat(req.body.fee);
+	
+	/* parameters validation */
+	if (!qty || isNaN(qty)) {
+		errCode = '400';
+    	errMsg = 'qty parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!price || isNaN(price)) {
+		errCode = '400';
+    	errMsg = 'price parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!fee || isNaN(fee)) {
+		errCode = '400';
+    	errMsg = 'fee parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (symbol === null) {
+		errCode = '400';
+    	errMsg = 'symbol parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	console.log('Buy ' + qty + ' shares of ' + symbol + ' at price ' + price + ' plus fee ' + fee);
+	
 	
 	var is_new_pos = true;
 	var cost = qty * price + fee; 
@@ -194,14 +241,54 @@ router.post('/', function(req, res) {
 /* Put sell a stock */
 router.put('/', function(req, res) {
 	var db = req.db;
+	
+	/* parameters */
 	var user_id = req.body.user_id;
 	var symbol = req.body.symbol;
 	var name = req.body.name;
-	
 	var qty = parseInt(req.body.qty);
 	var price = parseFloat(req.body.price);
 	var fee = parseFloat(req.body.fee);
-
+	
+	/* parameters validation */
+	if (!qty || isNaN(qty)) {
+		errCode = '400';
+    	errMsg = 'qty parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!price || isNaN(price)) {
+		errCode = '400';
+    	errMsg = 'price parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!fee || isNaN(fee)) {
+		errCode = '400';
+    	errMsg = 'fee parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (symbol === null) {
+		errCode = '400';
+    	errMsg = 'symbol parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	console.log('Sell ' + qty + ' shares of ' + symbol + ' at price ' + price + ' plus fee ' + fee);
+	
+	
 	var earn = qty * price - fee; 
 	var db_url = req.db_url;
 	var cur_pos, new_pos;
@@ -298,6 +385,15 @@ router.get('/gains/:user_id', function(req, res) {
 	var db_url = req.db_url;
 	var user_id = req.params.user_id;
 	
+	/* parameters validation */	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
         db = _db;
@@ -307,11 +403,14 @@ router.get('/gains/:user_id', function(req, res) {
     .then(function(result) {
     
     	if (result != null) {
+    		console.log('gains:'+result.gain);
     		res.json({'status':'200','data': {'user_id':user_id,'gain':result.gain}});
     	}
     	else {
+    		console.log('gain:[]');
     		res.json({'status':'200','data': {'user_id':user_id,'gain':[]}})
     	}
+
     })
     
     .catch(function(err) {
@@ -332,6 +431,22 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
 	var db_url = req.db_url;
 	var user_id = req.params.user_id;
 	var count = req.params.count;
+	
+	/* parameters validation */	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!count || isNaN(count)) {
+		errCode = '400';
+    	errMsg = 'count is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
 	var rankings = [];
 	var users = [];
 	var result = [];
@@ -377,6 +492,7 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
     		result.push(rank);
     	}
     	
+    	console.log(result);
     	return res.send({'status':'200','data':{'ranking':result}});
     	
     })
@@ -398,10 +514,19 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
 router.get('/rankings/friends/:user_id', function(req, res) {   
 	var db_url = req.db_url;
 	var user_id = req.params.user_id;
+	
+	/* parameters validation */	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
 	var rankings = [];
 	var users = [];
 	var result = [];
-
+	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
         db = _db;
@@ -460,6 +585,8 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     		result.sort(function (a, b) {
   				return b.gain_pct - a.gain_pct;
 			})
+			
+			console.log(result);
     		return res.send({'status':'200','data':{'ranking':result}});
     	}
     	
@@ -477,6 +604,9 @@ router.get('/rankings/friends/:user_id', function(req, res) {
 	})
 });	
 
+
+
+/* Auxiliary functions */
 
 function find_user_index(users_array,_user_id){
 
