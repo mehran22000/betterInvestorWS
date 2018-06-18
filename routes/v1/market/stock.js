@@ -84,7 +84,7 @@ router.get('/symbols/version/:version', function(req, res) {
 	var res_price_dic = {};
 	
 	/* parameters validation */	
-	if (!version || isNaN(version)) {
+	if (!req.params.version || isNaN(req.params.version)) {
 		errCode = '400';
     	errMsg = 'version parameter is invalid';
     	console.log(errMsg);
@@ -158,7 +158,7 @@ router.get('/quote/array/:array', function(req, res) {
 	const request = require("request");
 	
 	// parameter validation
-	if (array === null) {
+	if (req.params.array === null) {
 		errCode = '400';
     	errMsg = 'array parameter is invalid';
     	console.log(errMsg);

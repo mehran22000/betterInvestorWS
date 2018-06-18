@@ -23,16 +23,17 @@ router.get('/:symbol/global/:global/userid/:userid', function(req, res) {
     	throw new Error(errCode);
 	}
 	
-	if (symbol === null) {
+	if (!symbol) {
 		errCode = '400';
     	errMsg = 'symbol parameter is invalid';
     	console.log(errMsg);
     	throw new Error(errCode);
 	}
    
-   if ((global != 'false') || (global != 'true')) {
+   
+   if ((global != 'false') && (global != 'true')) {
 		errCode = '400';
-    	errMsg = 'symbol parameter is invalid';
+    	errMsg = 'global parameter is invalid';
     	console.log(errMsg);
     	throw new Error(errCode);
 	}

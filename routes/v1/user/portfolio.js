@@ -15,7 +15,7 @@ router.get('/:user_id', function(req, res) {
 	var rank_global;
 	
 	/* parameters validation */	
-	if (!user_id || isNaN(user_id)) {
+	if (!req.params.user_id || isNaN(req.params.user_id)) {
 		errCode = '400';
     	errMsg = 'user id parameter is invalid';
     	console.log(errMsg);
