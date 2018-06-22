@@ -37,7 +37,15 @@ function updateStockPrice(){
 			url = iextrading_url.replace('{symbol}',symbol);
 			request.get(url, (error, response, body) => {
     		    if (error){
-    		    	console.log(error);
+
+    		    	// extract symbol from url
+    		    	var start_index = url.search("/stock/") + "/stock/".length;
+					var end_index = url.search("/batch?");
+					symbol = url.substring(start_index,end_index);
+
+    		    	// find prev stock price
+    		    	let prv_index = find_prv_price(stocks,symbol);
+    		    	updated_quotes.set(symbol, {'symbol':symbol, 'price':stocks[prv_index].price, 'date_time':stocks[prv_index].date_time, 'latest_update':stocks[prv_index].latest_update});
     		    	index = index + 1;
     		    }
     		    else {
@@ -48,8 +56,6 @@ function updateStockPrice(){
  					if (price > 0){
  						var date = new Date().toISOString();
  						updated_quotes.set(res_symbol, {'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
-  						// stocks = update_price(stocks, res_symbol, price, date, latest_update);
-  						// console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
   					}
   					else {
   						console.log('Invalid Response: res_price');
@@ -329,5 +335,19 @@ router.post('/updateSymbols/service', function (req, res){
     	}
 	})
 });
+
+
+
+/* Auxiliary functions */
+function find_prv_price(stock_array,symbol){
+
+	for (var s in stock_array) {
+		if (stock_array[s].symbol == symbol) {
+			return s;
+		}
+	}
+	return -1;
+}
+
 
 module.exports = router;

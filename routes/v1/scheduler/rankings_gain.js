@@ -10,10 +10,8 @@ var market;
 var _db;
 
 // analytics variables
-var positive_gain_users;
-
-
-calculate_gain_ranking();
+// var positive_gain_users;
+// calculate_gain_ranking();
 
 /* scheduler to rank users daily */
 var j = schedule.scheduleJob('* * 6 * *', function(){
