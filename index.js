@@ -1,7 +1,7 @@
 var express = require('express');
 var mongo = require('mongoskin');
 var bodyParser = require('./node_modules/body-parser');
-var env = require('env_config.json');
+var env = require.main.require('./env_config.json');
 var db_url = env["db_url"];
 
 var db = mongo.db(db_url, {native_parser:true});

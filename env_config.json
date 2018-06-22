@@ -1,0 +1,7 @@
+{
+  "name": "env_dev",
+  "version": "0.1",
+  "db_url": "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms",
+  "iextrading_url" : "https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1",
+  "iextrading_symbol_url" : "https://api.iextrading.com/1.0/ref-data/symbols"
+}

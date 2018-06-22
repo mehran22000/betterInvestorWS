@@ -5,7 +5,8 @@ const sortBy = require('sort-array');
 
 var router = express.Router();
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
-var env = require('env_config.json');
+
+var env = require.main.require('./env_config.json');
 var db_url = env['db_url'];
 
 var market;
