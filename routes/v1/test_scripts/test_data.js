@@ -5,7 +5,7 @@ var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 
 var router = express.Router();
 // var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
-var env = require('env_config.json');
+var env = require.main.require('./env_config.json');
 var db_url = env['db_url'];
 
 
