@@ -4,7 +4,8 @@ const sortBy = require('sort-array');
 var Promise = require('bluebird');
 var router = express.Router();
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
-var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
+
+
 var market;
 var _db;
 

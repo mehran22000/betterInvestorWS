@@ -1,0 +1,7 @@
+{
+  "name": "env_staging",
+  "version": "0.1",
+  "db_url": "mongodb://mehran:mehrdad781@ds217351.mlab.com:17351/heroku_bbtwgvbs",
+  "iextrading_url" : "https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1",
+  "iextrading_symbol_url" : "https://api.iextrading.com/1.0/ref-data/symbols"
+}
