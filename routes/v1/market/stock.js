@@ -1,12 +1,16 @@
 var express = require('express');
-var router = express.Router();
-var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
+var router = express.Router()
+var env = require('env_config.json');
+var db_url = env['db_url'];
+
+
 var schedule = require('node-schedule');
 var Promise = require('bluebird');
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
-var iextrading_url = 'https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1'
-var iextrading_symbol_url = 'https://api.iextrading.com/1.0/ref-data/symbols'
-
+// var iextrading_url = 'https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1'
+// var iextrading_symbol_url = 'https://api.iextrading.com/1.0/ref-data/symbols'
+var iextrading_url = env["iextrading_url"];
+var iextrading_symbol_url = env["iextrading_symbol_url"];
 
 /* scheduler to get the latest stock price every minute */
 var j = schedule.scheduleJob('* * * * *', function(){

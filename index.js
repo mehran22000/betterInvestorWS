@@ -1,8 +1,9 @@
 var express = require('express');
 var mongo = require('mongoskin');
 var bodyParser = require('./node_modules/body-parser');
+var env = require('env_config.json');
+var db_url = env["db_url"];
 
-var db_url = "mongodb://mehran:mehrdad781@ds245755.mlab.com:45755/heroku_p0jvg7ms"
 var db = mongo.db(db_url, {native_parser:true});
 
 var stock = require('./routes/v1/market/stock');
