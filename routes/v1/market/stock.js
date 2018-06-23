@@ -9,7 +9,7 @@ var Promise = require('bluebird');
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 // var iextrading_url = 'https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1'
 // var iextrading_symbol_url = 'https://api.iextrading.com/1.0/ref-data/symbols'
-// var iextrading_url = env["iextrading_url"];
+var iextrading_url = env["iextrading_url"];
 var iextrading_symbol_url = env["iextrading_symbol_url"];
 
 /* scheduler to get the latest stock price every minute */
