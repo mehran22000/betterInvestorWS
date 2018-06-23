@@ -9,7 +9,7 @@ var Promise = require('bluebird');
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 // var iextrading_url = 'https://api.iextrading.com/1.0/stock/{symbol}/batch?types=quote&range=1m&last=1'
 // var iextrading_symbol_url = 'https://api.iextrading.com/1.0/ref-data/symbols'
-var iextrading_url = env["iextrading_url"];
+// var iextrading_url = env["iextrading_url"];
 var iextrading_symbol_url = env["iextrading_symbol_url"];
 
 /* scheduler to get the latest stock price every minute */
@@ -40,17 +40,22 @@ function updateStockPrice(){
 			var symbol = stocks[i].symbol;
 			url = iextrading_url.replace('{symbol}',symbol);
 			request.get(url, (error, response, body) => {
-    		    if (error){
-
+    		    if (error || (body === "Not Found")){
+					console.log('UpdateStockPrice Failed error= ' + error + ' body=' + body);
+					
+					// ToDo: partial quote update allowed. 
+    		    	// Challenge: url parameter is overwritten each time and only show the last url
+    		    	/* 
     		    	// extract symbol from url
-    		    	var start_index = url.search("/stock/") + "/stock/".length;
-					var end_index = url.search("/batch?");
-					symbol = url.substring(start_index,end_index);
+    		    	   var start_index = request.url.search("/stock/") + "/stock/".length;
+					   var end_index = request.url.search("/batch?");
+					    var sym = request.url.substring(start_index,end_index);
 
     		    	// find prev stock price
-    		    	let prv_index = find_prv_price(stocks,symbol);
-    		    	updated_quotes.set(symbol, {'symbol':symbol, 'price':stocks[prv_index].price, 'date_time':stocks[prv_index].date_time, 'latest_update':stocks[prv_index].latest_update});
-    		    	index = index + 1;
+    		    	   let prv_index = find_prv_price(stocks,sym);
+    		    	   updated_quotes.set(sym, {'symbol':sym, 'price':stocks[prv_index].price, 'date_time':stocks[prv_index].date_time, 'latest_update':stocks[prv_index].latest_update});
+    		    	   index = index + 1;
+    		    	*/
     		    }
     		    else {
     		    	let data = JSON.parse(body);
