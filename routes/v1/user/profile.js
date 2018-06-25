@@ -26,13 +26,6 @@ router.post('/', function(req, res) {
     	throw new Error(errCode);
 	}
 	
-	if (email === null) {
-		errCode = '400';
-    	errMsg = 'email parameter is invalid';
-    	console.log(errMsg);
-    	throw new Error(errCode);
-	}
-	
 	if (first_name === null) {
 		errCode = '400';
     	errMsg = 'first name parameter is invalid';
