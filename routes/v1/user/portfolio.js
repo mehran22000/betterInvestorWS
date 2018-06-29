@@ -475,11 +475,11 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
     	var min_index = Math.max((rank_index - (parseInt(count)/2),0));
     	var max_index = Math.min(min_index + count, users.length);
     	
-    	console.log('rank_index='+rank_index + " ,min_idex=" + min_index + " ,max_index="+ max_index);
+    	console.log('rank_index='+rank_index + " ,min_index=" + min_index + " ,max_index="+ max_index);
     	
     	for (var rank_index=min_index; rank_index < max_index; rank_index++)
     	{
-    		var user_index = find_user_index(users,rankings[rank_index].user_id);
+     		var user_index = find_user_index(users,rankings[rank_index].user_id);		
     		var rank = {};
     		rank.user_id = rankings[rank_index].user_id;
     		rank.gain = rankings[rank_index].gain;
@@ -551,10 +551,10 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     	}
     	else {
     		var user_friends_array = user_friends_str.split(',');
-    		var friends_no = user_friends_array.length;
+    		var friends_no = user_friends_array.length + 1;
     	
     		var index = 0;
-    		var user_friends_str_sync = ',' + user_friends_str + ',';
+    		var user_friends_str_sync = ',' + user_id + ',' + user_friends_str + ',';
     		for (var u in users)
     		{
     			var search_key = ',' + users[u].user_id + ',';
