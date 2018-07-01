@@ -557,10 +557,10 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     	}
     	else {
     		var user_friends_array = user_friends_str.split(',');
-    		var friends_no = user_friends_array.length;
+    		var friends_no = user_friends_array.length + 1;
     	
     		var index = 0;
-    		var user_friends_str_sync = ',' + user_friends_str + ',';
+    		var user_friends_str_sync = ',' + user_id + ',' + user_friends_str + ',';
     		for (var u in users)
     		{
     			var search_key = ',' + users[u].user_id + ',';
