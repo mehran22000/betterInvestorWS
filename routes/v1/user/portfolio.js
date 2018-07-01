@@ -456,6 +456,7 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
         return db.collection('rankings').find().toArray();
     })
     
+    
     .then(function(_ranking) {      
         rankings = _ranking;
         return db.collection('users').find().toArray();
@@ -473,7 +474,7 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
     	}
     	
     	var min_index = Math.max((rank_index - (parseInt(count)/2),0));
-    	var max_index = Math.min(min_index + count, users.length);
+    	var max_index = Math.min(min_index + count, rankings.length);
     	
     	console.log('rank_index='+rank_index + " ,min_idex=" + min_index + " ,max_index="+ max_index);
     	
@@ -525,6 +526,7 @@ router.get('/rankings/friends/:user_id', function(req, res) {
 	var rankings = [];
 	var users = [];
 	var result = [];
+	var stats = {};
 	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
@@ -533,10 +535,14 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     })
     
     .then(function(_ranking) {      
-        rankings = _ranking; 
-        return db.collection('users').find().toArray();
+        rankings = _ranking;
+        return db.collection('stats').findOne();
     })
     
+    .then(function(_stats) {
+    	stats = _stats;
+    	return db.collection('users').find().toArray();
+    })
     
     .then(function(_users) {
     	users = _users;
@@ -551,10 +557,10 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     	}
     	else {
     		var user_friends_array = user_friends_str.split(',');
-    		var friends_no = user_friends_array.length;
+    		var friends_no = user_friends_array.length + 1;
     	
     		var index = 0;
-    		var user_friends_str_sync = ',' + user_friends_str + ',';
+    		var user_friends_str_sync = ',' + user_id + ',' + user_friends_str + ',';
     		for (var u in users)
     		{
     			var search_key = ',' + users[u].user_id + ',';
@@ -572,9 +578,17 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     		    	user_rank.photo_url = users[u].photo_url;
     		    	user_rank.first_name = users[u].first_name;
     		    	user_rank.last_name = users[u].last_name;
-    				user_rank.gain = rankings[friend_rank_index].gain;
-    		    	user_rank.gain_pct = rankings[friend_rank_index].gain_pct;
-    		    	user_rank.rank_global = rankings[friend_rank_index].rank_global;
+    		    	if (friend_rank_index > -1) {
+    					user_rank.gain = rankings[friend_rank_index].gain;
+    		    		user_rank.gain_pct = rankings[friend_rank_index].gain_pct;
+    		    		user_rank.rank_global = rankings[friend_rank_index].rank_global;
+    		    	}
+    		    	else {
+    		    		user_rank.gain = '0';
+    		    		user_rank.gain_pct = '0';
+    		    		console.log('stats =' +  stats);
+    		    		user_rank.rank_global = stats.positive_gain_users + 1;
+    		    	}
     		    	// Add to the result
     				result.push(user_rank);
     			} 
