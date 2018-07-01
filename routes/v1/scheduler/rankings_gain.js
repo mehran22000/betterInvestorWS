@@ -17,7 +17,7 @@ var _db;
 // calculate_gain_ranking();
 
 /* scheduler to rank users daily */
-var j = schedule.scheduleJob('* * 6 * *', function(){
+var j = schedule.scheduleJob('0 * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update ranking ' + date);
   calculate_gain_ranking();
@@ -57,11 +57,13 @@ function calculate_gain_ranking(){
 					user_positions.push(portfolio[p]);
 					// calculate gain
 					var price = getStockPrice(portfolio[p].symbol);
-					gain = gain + (portfolio[p].qty * price - portfolio[p].cost); 
+					var stock_gain = portfolio[p].qty * price - portfolio[p].cost;
+					gain = gain + stock_gain; 
 					console.log('- symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + gain);
 				}
 			}
-			var gain_pct = gain / users[u].credit;				
+			var gain_pct = gain / users[u].credit;
+			console.log('total gain=' + gain + ' ' + gain_pct);				
 			dic_user_gain[users[u].user_id] = gain_pct;
 			
 			if (gain > 0) {
@@ -162,7 +164,6 @@ function update_gains(_rankings) {
     		console.log(gain_array);
     		console.log('previous gain_array is');
     		console.log(gains);
-    		return true;
     	}
 	})
 
