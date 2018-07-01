@@ -525,6 +525,7 @@ router.get('/rankings/friends/:user_id', function(req, res) {
 	var rankings = [];
 	var users = [];
 	var result = [];
+	var stats = {};
 	
 	mongoClient.connectAsync(db_url)  
     .then(function(_db) {      
@@ -533,10 +534,22 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     })
     
     .then(function(_ranking) {      
-        rankings = _ranking; 
-        return db.collection('users').find().toArray();
+        rankings = _ranking;
+        var rank_index = find_user_index(rankings,user_id); 
+        if (rank_index < 0) {
+        	return db.collection('stats').findOne();
+        }
+        else {
+        	return null;
+        }
     })
     
+    .then(function(_stats) {
+    	if (_stats) {
+    		stats = _stats;
+    	}
+    	return db.collection('users').find().toArray();
+    })
     
     .then(function(_users) {
     	users = _users;
@@ -572,9 +585,16 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     		    	user_rank.photo_url = users[u].photo_url;
     		    	user_rank.first_name = users[u].first_name;
     		    	user_rank.last_name = users[u].last_name;
-    				user_rank.gain = rankings[friend_rank_index].gain;
-    		    	user_rank.gain_pct = rankings[friend_rank_index].gain_pct;
-    		    	user_rank.rank_global = rankings[friend_rank_index].rank_global;
+    		    	if (friend_rank_index > -1) {
+    					user_rank.gain = rankings[friend_rank_index].gain;
+    		    		user_rank.gain_pct = rankings[friend_rank_index].gain_pct;
+    		    		user_rank.rank_global = rankings[friend_rank_index].rank_global;
+    		    	}
+    		    	else {
+    		    		user_rank.gain = 0;
+    		    		user_rank.gain_pct = 0;
+    		    		user_rank.rank_global = stats.positive_gain_users + 1;
+    		    	}
     		    	// Add to the result
     				result.push(user_rank);
     			} 
