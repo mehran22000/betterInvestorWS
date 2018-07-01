@@ -456,6 +456,7 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
         return db.collection('rankings').find().toArray();
     })
     
+    
     .then(function(_ranking) {      
         rankings = _ranking;
         return db.collection('users').find().toArray();
@@ -473,7 +474,7 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
     	}
     	
     	var min_index = Math.max((rank_index - (parseInt(count)/2),0));
-    	var max_index = Math.min(min_index + count, users.length);
+    	var max_index = Math.min(min_index + count, rankings.length);
     	
     	console.log('rank_index='+rank_index + " ,min_idex=" + min_index + " ,max_index="+ max_index);
     	
@@ -535,19 +536,11 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     
     .then(function(_ranking) {      
         rankings = _ranking;
-        var rank_index = find_user_index(rankings,user_id); 
-        if (rank_index < 0) {
-        	return db.collection('stats').findOne();
-        }
-        else {
-        	return null;
-        }
+        return db.collection('stats').findOne();
     })
     
     .then(function(_stats) {
-    	if (_stats) {
-    		stats = _stats;
-    	}
+    	stats = _stats;
     	return db.collection('users').find().toArray();
     })
     
@@ -591,8 +584,9 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     		    		user_rank.rank_global = rankings[friend_rank_index].rank_global;
     		    	}
     		    	else {
-    		    		user_rank.gain = 0;
-    		    		user_rank.gain_pct = 0;
+    		    		user_rank.gain = '0';
+    		    		user_rank.gain_pct = '0';
+    		    		console.log('stats =' +  stats);
     		    		user_rank.rank_global = stats.positive_gain_users + 1;
     		    	}
     		    	// Add to the result
