@@ -59,12 +59,11 @@ function calculate_gain_ranking(){
 					var price = getStockPrice(portfolio[p].symbol);
 					var stock_gain = portfolio[p].qty * price - portfolio[p].cost;
 					gain = gain + stock_gain; 
-					console.log('- symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + stock_gain);
+					console.log('- symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + gain);
 				}
 			}
-			var gain_pct = gain / users[u].credit;				
-			console.log('total gain=' + gain + ' ' + gain_pct);
-			
+			var gain_pct = gain / users[u].credit;
+			console.log('total gain=' + gain + ' ' + gain_pct);				
 			dic_user_gain[users[u].user_id] = gain_pct;
 			
 			if (gain > 0) {
