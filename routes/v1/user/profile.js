@@ -77,37 +77,45 @@ router.post('/', function(req, res) {
         	updated_users.push(users[user_index]._id);
     	}
     	
-    	var friends_array = friends.split(',');
-    	var friends_pic_array = friends_pic.split(',');
+    	var friends_array, friends_pic_array;
     	
-    	var search_key = ',' + user_id + ',';
-    	for (f in friends_array) {
-    		var friend_index = find_user_index(users,friends_array[f]);
-    		if (friend_index >= 0) {
-    			var user_info_changed = false;
-    		    var muser = users[friend_index];
+    	if (friends != null) {
+    		friends_array = friends.split(',');
+    	}
+    	if (friends_pic != null) {
+    		friends_pic_array = friends_pic.split(',');
+    	}
+    	
+    	if ((friends_array != null) && (friends_pic_array != null)) {
+    	
+    		var search_key = ',' + user_id + ',';
+    		for (f in friends_array) {
+    			var friend_index = find_user_index(users,friends_array[f]);
+    			if (friend_index >= 0) {
+    				var user_info_changed = false;
+    		    	var muser = users[friend_index];
     			
-    			var sync_friend_str = ',' + users[friend_index].friends + ',';
-    			if (sync_friend_str.indexOf(search_key) == -1) {
-    				// add the user to the user's friend's friend list
-    				if ((muser.friends !== null) && (muser.friends !== "")){
-    					muser.friends = muser.friends + ',' ;
+    				var sync_friend_str = ',' + users[friend_index].friends + ',';
+    				if (sync_friend_str.indexOf(search_key) == -1) {
+    					// add the user to the user's friend's friend list
+    					if ((muser.friends !== null) && (muser.friends !== "")){
+    						muser.friends = muser.friends + ',' ;
+    					}
+    					muser.friends = muser.friends + user_id;
+    					user_info_changed = true;
     				}
-    				muser.friends = muser.friends + user_id;
-    				user_info_changed = true;
-    			}
     			
-    			// update friend photo url if it is required
-    			if (users[friend_index].photo_url !== friends_pic_array[f]) {
-    				muser.photo_url = friends_pic_array[f];
-    				user_info_changed = true;
-    			}
+    				// update friend photo url if it is required
+    				if (users[friend_index].photo_url !== friends_pic_array[f]) {
+    					muser.photo_url = friends_pic_array[f];
+    					user_info_changed = true;
+    				}
     			
-    			if (user_info_changed == true) {
-    				add_users.push(muser);
-        			updated_users.push(users[friend_index]._id);
+    				if (user_info_changed == true) {
+    					add_users.push(muser);
+        				updated_users.push(users[friend_index]._id);
+    				}
     			}
-    			
     		}
     	}    	
     	return db.collection('users').remove(({'_id':{'$in':updated_users}}));
