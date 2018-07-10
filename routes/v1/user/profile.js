@@ -137,6 +137,69 @@ router.post('/', function(req, res) {
 	
 });
 
+// Post add credit
+router.post('/credit', function(req, res) {
+	
+	var db_url = req.db_url;
+	var db = req.db;
+	var user;
+	var user_id = req.body.user_id;
+	var amount = req.body.amount;
+	var source = req.body.source;
+	
+	console.log('add ' + source + " amount:" + amount + " user:" + user_id);
+	
+	/* parameters validation */	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!amount || isNaN(amount)) {
+		errCode = '400';
+    	errMsg = 'amount parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	mongoClient.connectAsync(db_url)  
+    .then(function(_db) {      
+        db = _db;
+        return db.collection('users').findOne({'user_id':user_id});
+    })
+    
+    .then(function(_user) {
+    	user = _user;
+    	user.credit = user.credit + amount;	   	
+    	return db.collection('users').remove({'user_id':user_id});
+    })
+    	
+	.then(function(_result) {
+		console.log('1.old user record is removed');
+		return db.collection('users').insert(user);
+	})
+	
+	.then(function(_result) {
+		console.log('2.updated user record is inserted');
+		var date = new Date();
+		var log = {'user_id':user.user_id, 'date':date.yyyymmdd(), 'action':'credit ' + amount, 'source':source}
+		return db.collection('logs').insert(log);
+	})
+	
+	
+	.then(function(_result) {
+		console.log('3.log record is inserted');
+		res.json({'status':'200','response':'success'});
+	})
+	
+	.catch(function (err) {
+		console.log(err);
+	});
+	
+});
+
 
 /* Auxiliary functions */
 
