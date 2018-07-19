@@ -62,6 +62,7 @@ function calculate_gain_ranking(){
 					console.log('- symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + stock_gain);
 				}
 			}
+			gain = gain + users[u].realized;
 			var gain_pct = gain / users[u].credit;
 			console.log('total gain=' + gain + ' ' + gain_pct);				
 			dic_user_gain[users[u].user_id] = gain_pct;

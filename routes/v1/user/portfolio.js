@@ -294,6 +294,8 @@ router.put('/', function(req, res) {
 	var user_profile;
 	var _db;
 	var errCode,errMsg;
+	var new_cost, partial_cost;
+	var new_qty;
 	
 	mongoClient.connectAsync(db_url)  
     
@@ -316,7 +318,9 @@ router.put('/', function(req, res) {
     			
     			cur_pos = pos;
 		    	new_cost = pos.cost * (1  - qty/pos.qty)
+		    	partial_cost = pos.cost * qty/pos.qty;
 		    	new_qty = pos.qty - qty;  
+		    	
 		    	if (new_qty > 0) {
 					console.log('3.insert the updated pos');	
     				new_pos = {"user_id":user_id,"symbol":symbol,"qty":new_qty,"cost":new_cost,"name":name}
@@ -346,6 +350,7 @@ router.put('/', function(req, res) {
     	console.log('5.remove the old user profile');
     	user_profile = profile;
     	user_profile.cash = profile.cash + earn;
+    	user_profile.realized = user_profile.realized + (earn - partial_cost); 
     	return (_db.collection('users').remove({'_id':profile._id}));
     	
     })

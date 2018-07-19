@@ -43,6 +43,7 @@ router.post('/', function(req, res) {
 	
 	
 	var cash = 20000;
+	var realized = 0;
 	var all_users = [];
 	var add_users = [];
 	var updated_users = [];
@@ -61,7 +62,7 @@ router.post('/', function(req, res) {
     	// create a new record for a new user
     	if (user_index < 0) {
     		is_new_user = true;
-    		var new_user = {"user_id":user_id,"email":email,"first_name":first_name,"last_name":last_name,"photo_url":photo_url,"friends":friends,"cash":cash,"credit":cash}
+    		var new_user = {"user_id":user_id,"email":email,"first_name":first_name,"last_name":last_name,"photo_url":photo_url,"friends":friends,"cash":cash,"credit":cash, "realized":realized}
     		console.log('new user is created:' + new_user);
     		add_users.push(new_user);
     	}
@@ -172,7 +173,7 @@ router.post('/credit', function(req, res) {
     
     .then(function(_user) {
     	user = _user;
-    	user.credit = user.credit + amount;	   	
+    	user.credit = user.cash + amount;	   	
     	return db.collection('users').remove({'user_id':user_id});
     })
     	
