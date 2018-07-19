@@ -144,10 +144,22 @@ router.post('/credit', function(req, res) {
 	var db_url = req.db_url;
 	var db = req.db;
 	var user;
+	var amount;
 	var user_id = req.body.user_id;
-	var amount = req.body.amount;
 	var source = req.body.source;
 	
+	if (source == "referral") {
+		amount = 1000;
+	} 
+	else if (source == "20k_inapp_cash_credit") {
+		amount = 20000;
+	}
+	else if (source == "50k_inapp_cash_credit") {
+		amount = 50000;
+	}
+	else {
+		amount = 0;
+	}
 	console.log('add ' + source + " amount:" + amount + " user:" + user_id);
 	
 	/* parameters validation */	
@@ -173,7 +185,7 @@ router.post('/credit', function(req, res) {
     
     .then(function(_user) {
     	user = _user;
-    	user.credit = user.cash + amount;	   	
+    	user.cash = user.cash + amount;	   	
     	return db.collection('users').remove({'user_id':user_id});
     })
     	
