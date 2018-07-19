@@ -43,6 +43,7 @@ router.post('/', function(req, res) {
 	
 	
 	var cash = 20000;
+	var realized = 0;
 	var all_users = [];
 	var add_users = [];
 	var updated_users = [];
@@ -61,7 +62,7 @@ router.post('/', function(req, res) {
     	// create a new record for a new user
     	if (user_index < 0) {
     		is_new_user = true;
-    		var new_user = {"user_id":user_id,"email":email,"first_name":first_name,"last_name":last_name,"photo_url":photo_url,"friends":friends,"cash":cash,"credit":cash}
+    		var new_user = {"user_id":user_id,"email":email,"first_name":first_name,"last_name":last_name,"photo_url":photo_url,"friends":friends,"cash":cash,"credit":cash, "realized":realized}
     		console.log('new user is created:' + new_user);
     		add_users.push(new_user);
     	}
@@ -128,6 +129,81 @@ router.post('/', function(req, res) {
 	})
 	
 	.then(function(_result) {
+		res.json({'status':'200','response':'success'});
+	})
+	
+	.catch(function (err) {
+		console.log(err);
+	});
+	
+});
+
+// Post add credit
+router.post('/credit', function(req, res) {
+	
+	var db_url = req.db_url;
+	var db = req.db;
+	var user;
+	var amount;
+	var user_id = req.body.user_id;
+	var source = req.body.source;
+	
+	if (source == "referral") {
+		amount = 1000;
+	} 
+	else if (source == "20k_inapp_cash_credit") {
+		amount = 20000;
+	}
+	else if (source == "50k_inapp_cash_credit") {
+		amount = 50000;
+	}
+	else {
+		amount = 0;
+	}
+	console.log('add ' + source + " amount:" + amount + " user:" + user_id);
+	
+	/* parameters validation */	
+	if (!user_id || isNaN(user_id)) {
+		errCode = '400';
+    	errMsg = 'user id parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	if (!amount || isNaN(amount)) {
+		errCode = '400';
+    	errMsg = 'amount parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	mongoClient.connectAsync(db_url)  
+    .then(function(_db) {      
+        db = _db;
+        return db.collection('users').findOne({'user_id':user_id});
+    })
+    
+    .then(function(_user) {
+    	user = _user;
+    	user.cash = user.cash + amount;	   	
+    	return db.collection('users').remove({'user_id':user_id});
+    })
+    	
+	.then(function(_result) {
+		console.log('1.old user record is removed');
+		return db.collection('users').insert(user);
+	})
+	
+	.then(function(_result) {
+		console.log('2.updated user record is inserted');
+		var date = new Date();
+		var log = {'user_id':user.user_id, 'date':date.yyyymmdd(), 'action':'credit ' + amount, 'source':source}
+		return db.collection('logs').insert(log);
+	})
+	
+	
+	.then(function(_result) {
+		console.log('3.log record is inserted');
 		res.json({'status':'200','response':'success'});
 	})
 	
