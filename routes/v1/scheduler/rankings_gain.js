@@ -14,7 +14,7 @@ var _db;
 
 // analytics variables
 // var positive_gain_users;
-// calculate_gain_ranking();
+calculate_gain_ranking();
 
 /* scheduler to rank users daily */
 var j = schedule.scheduleJob('0 * * * *', function(){
@@ -51,6 +51,8 @@ function calculate_gain_ranking(){
 		for (var u in users) {
 			var user_positions = [];
 			var gain = 0;
+			var cost = 0;
+			var gain_pct = 0;
 			console.log('Calculate gain for user id =' +  users[u].user_id + ':'); 
 			for (var p in portfolio) {
 				if (users[u].user_id === portfolio[p].user_id){
@@ -58,12 +60,16 @@ function calculate_gain_ranking(){
 					// calculate gain
 					var price = getStockPrice(portfolio[p].symbol);
 					var stock_gain = portfolio[p].qty * price - portfolio[p].cost;
+					cost = cost + portfolio[p].cost;
 					gain = gain + stock_gain; 
 					console.log('- symbol=' + portfolio[p].symbol+ ' price=' + price + ' qty=' + portfolio[p].qty + ' cost=' + portfolio[p].cost + ' gain=' + stock_gain);
 				}
 			}
 			gain = gain + users[u].realized;
-			var gain_pct = gain / users[u].credit;
+			if (cost > 0) {
+				gain_pct = gain / cost;
+			}
+			
 			console.log('total gain=' + gain + ' ' + gain_pct);				
 			dic_user_gain[users[u].user_id] = gain_pct;
 			
