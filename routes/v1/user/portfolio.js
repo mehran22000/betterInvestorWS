@@ -601,7 +601,7 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     		
     		// Sort the result
     		result.sort(function (a, b) {
-  				return b.gain_pct - a.gain_pct;
+  				return b.gain - a.gain;
 			})
 			
 			console.log(result);
