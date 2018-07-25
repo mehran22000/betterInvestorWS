@@ -66,9 +66,7 @@ function calculate_gain_ranking(){
 				}
 			}
 			gain = gain + users[u].realized;
-			if (cost > 0) {
-				gain_pct = gain / cost;
-			}
+			gain_pct = gain / users[u].cash;
 			
 			console.log('total gain=' + gain + ' ' + gain_pct);				
 			dic_user_gain[users[u].user_id] = gain_pct;
@@ -82,7 +80,7 @@ function calculate_gain_ranking(){
     	
     	// global rankings
     	ranking_array.sort(function (a, b) {
-  			return b.gain_pct - a.gain_pct;
+  			return b.gain - a.gain;
 		});
     	for (var r in ranking_array) {
     		ranking_array[r].rank_global = Number(r) + 1; 
