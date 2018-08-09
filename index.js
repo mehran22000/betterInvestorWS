@@ -7,6 +7,8 @@ var db_url = env["db_url"];
 var db = mongo.db(db_url, {native_parser:true});
 
 var stock = require('./routes/v1/market/stock');
+var app_logs = require('./routes/v1/logs/app');
+
 var profile = require('./routes/v1/user/profile');
 var portfolio = require('./routes/v1/user/portfolio');
 var holders = require('./routes/v1/users/holders');
@@ -37,6 +39,8 @@ app.use('/services/v1/market/stock', stock);
 app.use('/services/v1/user/profile', profile);
 app.use('/services/v1/user/portfolio', portfolio);
 app.use('/services/v1/users/holders', holders);
+app.use('/services/v1/logs/app', app_logs);
+
 // app.use('/services/v1/testscript/testdata', test_data);
 
 module.exports = app;
