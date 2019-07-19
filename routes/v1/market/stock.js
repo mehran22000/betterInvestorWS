@@ -156,7 +156,7 @@ router.get('/quote/:symbol', function(req, res) {
     	}
     	else {
     		let data = JSON.parse(body);
-    		let price = data['quote']['latestPrice'];
+    		let price = data[0]['lastSalePrice'];
     		if (price > 0){
  				res_price_dic[symbol]=price;
     			res.json({'status':'200','data':res_price_dic});
@@ -227,7 +227,7 @@ router.get('/quote/array/:array', function(req, res) {
     		var index = 0;
 			for (var i in unfound_array){
 				var symbol = unfound_array[i];
-				url = iextrading_url.replace('{symbol}',symbol);
+				url = iextrading_url.replace('SYM',symbol);
 				request.get(url, (error, response, body) => {
     		    	if (error){
     		    		console.log(error);
@@ -235,19 +235,21 @@ router.get('/quote/array/:array', function(req, res) {
     		    	}
     		    	else {
     		    		let data = JSON.parse(body);
-    		    		let price = data['quote']['latestPrice'];
-    		    		let res_symbol = data['quote']['symbol'];
-    		    		let latest_update = data['quote']['latestUpdate'];		
- 							
- 						if (price > 0){
- 							var date = new Date().toISOString();
- 							stocks.push({'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
-  							res_price_dic[res_symbol] = price;
-  							console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
-  						}
-  						else {
-  							console.log('Invalid Response: res_price');
-  						}
+						if (data.length > 0) { 
+    		    			let price = data[0]['lastSalePrice'];
+							let res_symbol = data[0]['symbol'];
+    		    			let latest_update = data[0]['lastUpdated'];	
+    		    			
+ 							if (price > 0){
+ 								var date = new Date().toISOString();
+ 								stocks.push({'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
+  								res_price_dic[res_symbol] = price;
+  								console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
+  							}
+  							else {
+  								console.log('Invalid Response: res_price');
+  							}
+						}
   						index = index + 1;
 					}
 					if (index == unfound_array.length) {
