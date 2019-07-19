@@ -147,7 +147,7 @@ router.get('/quote/:symbol', function(req, res) {
     	throw new Error(errCode);
 	}
 	
-	var url = iextrading_url.replace('{symbol}',symbol);
+	var url = iextrading_url.replace('SYM',symbol);
 	var res_price_dic = {};
 	request.get(url, (error, response, body) => {
     	if (error){
