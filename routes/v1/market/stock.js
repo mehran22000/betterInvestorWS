@@ -38,7 +38,7 @@ function updateStockPrice(){
 		var index = 0;
 		for (var i in stocks){
 			var symbol = stocks[i].symbol;
-			url = iextrading_url.replace('{symbol}',symbol);
+			url = iextrading_url.replace('SYM',symbol);
 			request.get(url, (error, response, body) => {
     		    if (error || (body === "Not Found")){
 					console.log('UpdateStockPrice Failed error= ' + error + ' body=' + body);
@@ -59,30 +59,34 @@ function updateStockPrice(){
     		    }
     		    else {
     		    	let data = JSON.parse(body);
-    		    	let price = data['quote']['latestPrice'];
-    		    	let res_symbol = data['quote']['symbol'];
-    		    	let latest_update = data['quote']['latestUpdate'];		
- 					if (price > 0){
- 						var date = new Date().toISOString();
- 						updated_quotes.set(res_symbol, {'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
-  					}
-  					else {
-  						console.log('Invalid Response: res_price');
-  					}
-  					index = index + 1;
-				}
-				if (index == stocks.length) {
-						
+					if (data != null) {
+						if (data.length > 0) { 
+    		    			let price = data[0]['lastSalePrice'];
+							let res_symbol = data[0]['symbol'];
+    		    			let latest_update = data[0]['lastUpdated'];		
+ 							if (price > 0){
+ 								var date = new Date().toISOString();
+ 								updated_quotes.set(res_symbol, {'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
+  							}
+  							else {
+  								console.log('Invalid Response: res_price');
+  							}
+						}
+					}
+					index = index + 1;	
+					if (index == stocks.length) {
 						_db.collection('stock_price').remove({}, function(err, result){
 							_db.collection('stock_price').insert(Array.from(updated_quotes.values()), function(err, result){
         						if (err == null) {
         							console.log('UpdateStockPrice finished.');
         							console.log(Array.from(updated_quotes.values()));
-        					}
-  						})	
-  					})
+        						}
+  							})	
+  						})
+					}
 				}
 			})
+			
 		}
 	})
 	.catch(function (err) {
