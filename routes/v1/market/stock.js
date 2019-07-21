@@ -61,9 +61,9 @@ function updateStockPrice(){
     		    	let data = JSON.parse(body);
 					if (data != null) {
 						if (data.length > 0) { 
-    		    			let price = data[0]['lastSalePrice'];
+    		    			let price = data[0]['price'];
 							let res_symbol = data[0]['symbol'];
-    		    			let latest_update = data[0]['lastUpdated'];		
+    		    			let latest_update = data[0]['time'];		
  							if (price > 0){
  								var date = new Date().toISOString();
  								updated_quotes.set(res_symbol, {'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
@@ -156,7 +156,7 @@ router.get('/quote/:symbol', function(req, res) {
     	}
     	else {
     		let data = JSON.parse(body);
-    		let price = data[0]['lastSalePrice'];
+    		let price = data[0]['price'];
     		if (price > 0){
  				res_price_dic[symbol]=price;
     			res.json({'status':'200','data':res_price_dic});
@@ -225,9 +225,12 @@ router.get('/quote/array/:array', function(req, res) {
     	if (unfound_array.length > 0 ) {
     		// fetch stock price for unfound stocks and add them to the table
     		var index = 0;
+			console.log('unfold_array');
+			console.log(unfound_array);
 			for (var i in unfound_array){
 				var symbol = unfound_array[i];
 				url = iextrading_url.replace('SYM',symbol);
+				console.log(url);
 				request.get(url, (error, response, body) => {
     		    	if (error){
     		    		console.log(error);
@@ -236,9 +239,9 @@ router.get('/quote/array/:array', function(req, res) {
     		    	else {
     		    		let data = JSON.parse(body);
 						if (data.length > 0) { 
-    		    			let price = data[0]['lastSalePrice'];
+    		    			let price = data[0]['price'];
 							let res_symbol = data[0]['symbol'];
-    		    			let latest_update = data[0]['lastUpdated'];	
+    		    			let latest_update = data[0]['time'];	
     		    			
  							if (price > 0){
  								var date = new Date().toISOString();
