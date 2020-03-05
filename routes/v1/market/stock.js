@@ -16,7 +16,7 @@ var iextrading_symbol_url = env["iextrading_symbol_url"];
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update stock price ' + date);
-  updateStockPrice();
+  // updateStockPrice();
 });
 
 
