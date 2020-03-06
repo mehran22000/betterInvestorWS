@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "mnsocialtraderks"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "mnsocialtraderks"
+    spec:
+      containers:
+        - name: "mnsocialtraderks"
+          image: "socialtrader.azurecr.io/mnsocialtraderks"
+          ports:
+          - containerPort: 3000
