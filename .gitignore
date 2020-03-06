@@ -9,5 +9,4 @@ env_config.json
 .DS_Store
 
 # Docker
-Dockerfile
 docker-compose.yml
