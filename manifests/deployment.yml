@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: devopsimage 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: devopsimage 
+    spec:
+      containers:
+        - name: devopsimage 
+          image: azuretradercontainerregistry.azurecr.io/devopsimage
+          ports:
+          - containerPort: 3000
