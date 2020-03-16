@@ -13,7 +13,7 @@ variables:
   dockerRegistryServiceConnection: 'fb957df6-a377-405b-af90-28534362ccea'
   imageRepository: 'devopstrader'
   containerRegistry: 'azuretradercontainerregistry.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
+  dockerfilePath: 'Dockerfile'
   tag: '$(Build.BuildId)'
   
   # Agent VM image name
