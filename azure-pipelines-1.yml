@@ -13,7 +13,7 @@ variables:
   dockerRegistryServiceConnection: '80e84b7b-760a-4765-a650-df8ec7a89244'
   imageRepository: 'traderdevops2'
   containerRegistry: 'azuretradercontainerregistry.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
+  dockerfilePath: 'Dockerfile'
   tag: '$(Build.BuildId)'
   
   # Agent VM image name
