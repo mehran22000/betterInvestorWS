@@ -17,6 +17,7 @@
     "mongodb": "*",
     "mongoose": "*",
     "mongoskin": "*",
+    "node-helm": "^0.1.0",
     "node-schedule": "^1.2.5",
     "request": "*",
     "sort-array": "*"
