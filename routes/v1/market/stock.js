@@ -30,7 +30,7 @@ function updateStockPrice(){
 	var updated_quotes = new Map();
 	mongoClient.connectAsync(db_url)  
     .then(function(db) {
-    	_db = db;
+		_db = db;
     	return _db.collection('stock_price').find().toArray();
     })
 	
@@ -39,8 +39,9 @@ function updateStockPrice(){
 		for (var i in stocks){
 			var symbol = stocks[i].symbol;
 			url = iextrading_url.replace('SYM',symbol);
+			console.log(url);
 			request.get(url, (error, response, body) => {
-    		    if (error || (body === "Not Found")){
+    		    if (error || (body === "Not Found") || (response.statusCode != 200)){
 					console.log('UpdateStockPrice Failed error= ' + error + ' body=' + body);
 					
 					// ToDo: partial quote update allowed. 
@@ -61,16 +62,21 @@ function updateStockPrice(){
     		    	let data = JSON.parse(body);
 					if (data != null) {
 						if (data.length > 0) { 
-    		    			let price = data[0]['price'];
-							let res_symbol = data[0]['symbol'];
-    		    			let latest_update = data[0]['time'];		
- 							if (price > 0){
- 								var date = new Date().toISOString();
- 								updated_quotes.set(res_symbol, {'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
-  							}
-  							else {
-  								console.log('Invalid Response: res_price');
-  							}
+							if ((data[0] != null) || (data[0]['price'] != null)){
+								console.log('UpdateStockPrice Failed ' + body);
+							}
+							else {
+								let price = data[0]['price'];
+								let res_symbol = data[0]['symbol'];
+    		    				let latest_update = data[0]['time'];		
+ 								if (price > 0){
+ 									var date = new Date().toISOString();
+ 									updated_quotes.set(res_symbol, {'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
+  								}
+  								else {
+  									console.log('Invalid Response: res_price');
+  								}
+							}
 						}
 					}
 					index = index + 1;	
@@ -150,7 +156,7 @@ router.get('/quote/:symbol', function(req, res) {
 	var url = iextrading_url.replace('SYM',symbol);
 	var res_price_dic = {};
 	request.get(url, (error, response, body) => {
-    	if (error){
+    	if ((error) || (response.statusCode != 200) ){
     		console.log(error);
     		res.json({'status':'500','msg':'price is unavailable'});
     	}
@@ -232,26 +238,30 @@ router.get('/quote/array/:array', function(req, res) {
 				url = iextrading_url.replace('SYM',symbol);
 				console.log(url);
 				request.get(url, (error, response, body) => {
-    		    	if (error){
+					console.log(response.statusCode);
+				
+					if ((error) || (response.statusCode != 200) ){
     		    		console.log(error);
     		    		index = index + 1;
-    		    	}
+					}
     		    	else {
-    		    		let data = JSON.parse(body);
+						let data = JSON.parse(body);
 						if (data.length > 0) { 
-    		    			let price = data[0]['price'];
-							let res_symbol = data[0]['symbol'];
-    		    			let latest_update = data[0]['time'];	
+							if ((data[0]) && (data[0]['price'])) {
+								let price = data[0]['price'];
+								let res_symbol = data[0]['symbol'];
+    		    				let latest_update = data[0]['time'];	
     		    			
- 							if (price > 0){
- 								var date = new Date().toISOString();
- 								stocks.push({'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
-  								res_price_dic[res_symbol] = price;
-  								console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
-  							}
-  							else {
-  								console.log('Invalid Response: res_price');
-  							}
+ 								if (price > 0){
+ 									var date = new Date().toISOString();
+ 									stocks.push({'symbol':res_symbol, 'price':price, 'date_time':date, 'latest_update':latest_update});
+  									res_price_dic[res_symbol] = price;
+  									console.log('updated price for ' + res_symbol + ' is ' + price + ' at ' + date);
+  								}
+  								else {
+  									console.log('Invalid Response: res_price');
+								}
+							}
 						}
   						index = index + 1;
 					}
