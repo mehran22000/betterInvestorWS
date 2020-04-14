@@ -13,13 +13,13 @@ var iextrading_url = env["iextrading_url"];
 var iextrading_symbol_url = env["iextrading_symbol_url"];
 
 /* scheduler to get the latest stock price every minute */
-/*
+
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update stock price ' + date);
   updateStockPrice();
 });
-*/
+
 
 
 function updateStockPrice(){
@@ -42,9 +42,8 @@ function updateStockPrice(){
 			url = iextrading_url.replace('SYM',symbol);
 			console.log(url);
 			request.get(url, (error, response, body) => {
-    		    if (error || (body === "Not Found") || (response.statusCode != 200)){
-					console.log('UpdateStockPrice Failed error= ' + error + ' body=' + body);
-					
+				if ((error) || (response.statusCode != 200) ){
+					console.log(error);
 					// ToDo: partial quote update allowed. 
     		    	// Challenge: url parameter is overwritten each time and only show the last url
     		    	/* 
@@ -63,7 +62,7 @@ function updateStockPrice(){
     		    	let data = JSON.parse(body);
 					if (data != null) {
 						if (data.length > 0) { 
-							if ((data[0] != null) || (data[0]['price'] != null)){
+							if ((data[0] == null) || (data[0]['price'] == null)){
 								console.log('UpdateStockPrice Failed ' + body);
 							}
 							else {
@@ -79,9 +78,12 @@ function updateStockPrice(){
   								}
 							}
 						}
-					}
 					index = index + 1;	
+					}
 					if (index == stocks.length) {
+						console.log('HERE HERE');
+						console.log(updated_quotes.values());
+
 						_db.collection('stock_price').remove({}, function(err, result){
 							_db.collection('stock_price').insert(Array.from(updated_quotes.values()), function(err, result){
         						if (err == null) {
