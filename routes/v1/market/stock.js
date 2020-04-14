@@ -13,12 +13,13 @@ var iextrading_url = env["iextrading_url"];
 var iextrading_symbol_url = env["iextrading_symbol_url"];
 
 /* scheduler to get the latest stock price every minute */
+/*
 var j = schedule.scheduleJob('* * * * *', function(){
   var date = new Date().toISOString();
   console.log('Time to update stock price ' + date);
   updateStockPrice();
 });
-
+*/
 
 
 function updateStockPrice(){
@@ -36,7 +37,7 @@ function updateStockPrice(){
 	
 	.then(function(stocks){
 		var index = 0;
-		for (var i in stocks){
+ 		for (var i in stocks){
 			var symbol = stocks[i].symbol;
 			url = iextrading_url.replace('SYM',symbol);
 			console.log(url);
@@ -267,7 +268,7 @@ router.get('/quote/array/:array', function(req, res) {
 					}
 					if (index == unfound_array.length) {
 						db.collection('stock_price').insert(stocks, function(err, result){
-        					if (err == null) {
+							if (err == null) {
         						console.log('stock price updated');
         					}
         					res.json({'status':'200','data':res_price_dic});
