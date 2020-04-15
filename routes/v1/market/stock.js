@@ -80,9 +80,7 @@ function updateStockPrice(){
 						}
 					index = index + 1;	
 					}
-					if (index == stocks.length) {
-						console.log('HERE HERE');
-						console.log(updated_quotes.values());
+					if ((index == stocks.length) && (updated_quotes.length == stocks.length)) {
 
 						_db.collection('stock_price').remove({}, function(err, result){
 							_db.collection('stock_price').insert(Array.from(updated_quotes.values()), function(err, result){
