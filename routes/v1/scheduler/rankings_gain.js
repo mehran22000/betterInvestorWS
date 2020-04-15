@@ -2,6 +2,7 @@ var express = require('express');
 var Promise = require('bluebird');
 var schedule = require('node-schedule');
 const sortBy = require('sort-array');
+var stockapi = require.main.require('./routes/v1/market/stock.js');
 
 var router = express.Router();
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
@@ -14,6 +15,8 @@ var _db;
 
 // analytics variables
 // var positive_gain_users;
+// Test
+
 calculate_gain_ranking();
 
 /* scheduler to rank users daily */
@@ -23,7 +26,8 @@ var j = schedule.scheduleJob('0 * * * *', function(){
   calculate_gain_ranking();
 });
 
-function calculate_gain_ranking(){
+async function calculate_gain_ranking(){
+	console.log('MARATON STARTED')
 	var users, portfolio;
 	var ranking_array = [];
 	positive_gain_users = 0;
@@ -44,7 +48,7 @@ function calculate_gain_ranking(){
 		return _db.collection('portfolio').find().toArray();
     })
     
-    .then(function(results) {
+    .then(async function(results) {
 		portfolio = results;
 		// calculate gains
 		var dic_user_gain = {};
@@ -58,7 +62,7 @@ function calculate_gain_ranking(){
 				if (users[u].user_id === portfolio[p].user_id){
 					user_positions.push(portfolio[p]);
 					// calculate gain
-					var price = getStockPrice(portfolio[p].symbol);
+					var price = await getStockPrice(portfolio[p].symbol);
 					var stock_gain = portfolio[p].qty * price - portfolio[p].cost;
 					cost = cost + portfolio[p].cost;
 					gain = gain + stock_gain; 
@@ -244,13 +248,14 @@ function find_user_index(users_array,_user_id){
 }
 
 
-function getStockPrice(symbol){	
+async function getStockPrice(symbol){	
 	for (var s in market) {
 		if (market[s].symbol.toUpperCase() === symbol.toUpperCase()){
 			return market[s].price;
 		}
 	}
-	return 0;
+	const result = await stockapi.getStockPrice(symbol);
+	return result;
 }
 
 

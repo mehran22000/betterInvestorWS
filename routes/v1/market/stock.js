@@ -142,6 +142,7 @@ router.get('/symbols/version/:version', function(req, res) {
 
 
 /* Get a single quote */
+/*
 router.get('/quote/:symbol', function(req, res) {   
 	const request = require("request");
 	var symbol = req.params.symbol.toUpperCase();
@@ -175,8 +176,59 @@ router.get('/quote/:symbol', function(req, res) {
 		}
 	});
 });
-		
+*/
+
+router.get('/quote/:symbol', async function(req, res) {   
+	var symbol = req.params.symbol.toUpperCase();
 	
+	// parameter validation
+	if (symbol === null) {
+		errCode = '400';
+    	errMsg = 'symbol parameter is invalid';
+    	console.log(errMsg);
+    	throw new Error(errCode);
+	}
+	
+	var res_price_dic = {};
+	var price = await getStockPrice(symbol);
+	if (price > 0){
+	   res_price_dic[symbol]=price;
+	   res.json({'status':'200','data':res_price_dic});
+   }
+   else {
+	   console.log('unexpected price response:' + price);
+	   res.json({'status':'500','msg':'price is unavailable'});
+   }
+});
+
+
+function getStockPrice(symbol){
+	return new Promise(resolve => {
+		const request = require("request");
+		var url = iextrading_url.replace('SYM',symbol);
+		console.log(url);
+		var res_price_dic = {};
+		request.get(url, (error, response, body) => {
+    		if ((error) || (response.statusCode != 200) ){
+    			console.log(error);
+    			resolve(-1);
+			}
+			else {
+    			let data = JSON.parse(body);
+    			let price = data[0]['price'];
+    			if (price > 0){
+					console.log(symbol + ":" + price)
+					resolve(price);
+				}
+				else {
+					resolve(-1);
+				}
+			}
+		});
+	});
+};
+
+
 
 
 /* GET the latest stock price for a comma separated list of stocks */
@@ -378,5 +430,8 @@ function find_prv_price(stock_array,symbol){
 	return -1;
 }
 
+  router.getStockPrice = getStockPrice;
+  module.exports = router;
+  module.exports.getStockPrice = getStockPrice;
 
-module.exports = router;
+//module.exports = router;
