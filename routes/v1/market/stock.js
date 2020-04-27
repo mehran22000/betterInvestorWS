@@ -80,14 +80,18 @@ function updateStockPrice(){
 						}
 					index = index + 1;	
 					}
-					if ((index == stocks.length) && (updated_quotes.length == stocks.length)) {
+					console.log('index=' + index + ' updated_quotes.length =' + updated_quotes.size + 'stocks.length = ' + stocks.length);
+					if ((index == stocks.length) && (updated_quotes.size == stocks.length)) {
 
 						_db.collection('stock_price').remove({}, function(err, result){
 							_db.collection('stock_price').insert(Array.from(updated_quotes.values()), function(err, result){
         						if (err == null) {
         							console.log('UpdateStockPrice finished.');
         							console.log(Array.from(updated_quotes.values()));
-        						}
+								}
+								else {
+									console.log(err);
+								}
   							})	
   						})
 					}
