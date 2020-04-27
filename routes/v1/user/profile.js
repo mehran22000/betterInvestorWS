@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var Promise = require('bluebird');
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
-
+const AWS = require('aws-sdk');
 
 
 /* POST add a user */
