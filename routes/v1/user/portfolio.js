@@ -490,7 +490,7 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
     		rank.user_id = rankings[rank_index].user_id;
     		rank.gain = rankings[rank_index].gain;
     		rank.gain_pct = rankings[rank_index].gain_pct;
-    		rank.photo_url = users[user_index].photo_url;
+			rank.photo_url = users[user_index].photo_url;
     		rank.rank_global = rank_index;
     		rank.first_name = users[user_index].first_name;
     		rank.last_name = users[user_index].last_name;
@@ -580,7 +580,7 @@ router.get('/rankings/friends/:user_id', function(req, res) {
     				// Create user rank object
     				var user_rank = {};
     				user_rank.user_id   = users[u].user_id;
-    		    	user_rank.photo_url = users[u].photo_url;
+					user_rank.photo_url = users[u].photo_url;
     		    	user_rank.first_name = users[u].first_name;
     		    	user_rank.last_name = users[u].last_name;
     		    	if (friend_rank_index > -1) {

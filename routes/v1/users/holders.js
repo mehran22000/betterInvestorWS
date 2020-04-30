@@ -4,10 +4,12 @@ const sortBy = require('sort-array');
 var Promise = require('bluebird');
 var router = express.Router();
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
-
-
+var fs = require('fs');
+var request = require('request');
 var market;
 var _db;
+
+// The name of the bucket that you h
 
 
 router.get('/:symbol/global/:global/userid/:userid', function(req, res) {
@@ -75,9 +77,9 @@ router.get('/:symbol/global/:global/userid/:userid', function(req, res) {
     		var rank_index = find_user_index(rankings,holders[h].user_id);
     		if (user_index >= 0) {
     			holders[h].first_name = users[user_index].first_name;
-    			holders[h].last_name = users[user_index].last_name;
-    			holders[h].photo_url = users[user_index].photo_url;
-    			holders[h].global_ranking = rankings[rank_index].rank_global;
+				holders[h].last_name = users[user_index].last_name;
+				holders[h].photo_url = users[user_index].photo_url;
+				holders[h].global_ranking = rankings[rank_index].rank_global;
     			
     			if (global == 'false') {
     				var search_key = ',' + users[user_index].user_id + ',';
@@ -114,9 +116,5 @@ function find_user_index(users_array,_user_id){
 	}
 	return -1;
 }
-
-
-
-
 
 module.exports = router;
