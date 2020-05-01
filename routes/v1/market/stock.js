@@ -80,7 +80,6 @@ function updateStockPrice(){
 						}
 					index = index + 1;	
 					}
-					console.log('index=' + index + ' updated_quotes.length =' + updated_quotes.size + 'stocks.length = ' + stocks.length);
 					if ((index == stocks.length) && (updated_quotes.size == stocks.length)) {
 
 						_db.collection('stock_price').remove({}, function(err, result){

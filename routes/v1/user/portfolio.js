@@ -480,10 +480,8 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
     	
     	var min_index = Math.max((rank_index - (parseInt(count)/2),0));
     	var max_index = Math.min(min_index + count, rankings.length);
-    	
     	console.log('rank_index='+rank_index + " ,min_index=" + min_index + " ,max_index="+ max_index);
-    	
-    	for (var rank_index=min_index; rank_index < max_index; rank_index++)
+		for (var rank_index=min_index; rank_index < max_index; rank_index++)
     	{
      		var user_index = find_user_index(users,rankings[rank_index].user_id);		
     		var rank = {};
@@ -491,14 +489,17 @@ router.get('/rankings/global/:user_id/count/:count', function(req, res) {
     		rank.gain = rankings[rank_index].gain;
     		rank.gain_pct = rankings[rank_index].gain_pct;
 			rank.photo_url = users[user_index].photo_url;
-    		rank.rank_global = rank_index;
+			// rank.rank_global = rank_index;
+			rank.rank_global = rankings[rank_index].rank_global;
+			
     		rank.first_name = users[user_index].first_name;
     		rank.last_name = users[user_index].last_name;
     		result.push(rank);
-    	}
-    	
-    	console.log(result);
-    	return res.send({'status':'200','data':{'ranking':result}});
+    	}	
+		result.sort(function (a, b) {
+			return a.rank_global - b.rank_global;
+	    });
+		return res.send({'status':'200','data':{'ranking':result}});
     	
     })
     

@@ -119,7 +119,7 @@ function update_rankings(_rankings) {
 			console.log('rankings table updated.');
 			console.log(_rankings);
 			// Next step is to update the gains table
-		    update_gains(_rankings);
+		    // update_gains(_rankings);
 		})
 		.catch(function (err) {
 			console.log(err);
