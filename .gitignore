@@ -10,3 +10,5 @@ env_config.json
 
 # Docker
 docker-compose.yml
+aws_key.json
+

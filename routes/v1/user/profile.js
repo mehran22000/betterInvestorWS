@@ -1,15 +1,16 @@
 var express = require('express');
 var router = express.Router();
 var Promise = require('bluebird');
+var aws_credentials = require.main.require('./aws_key.json');
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 
 // Enter copied or downloaded access ID and secret key here
-const ID = '<ID>';
-const SECRET = '<Secret>';
+const AWS_ID = aws_credentials["accessKeyId"];
+const AWS_SECRET = aws_credentials["secretAccessKey"];
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({
-    accessKeyId: ID,
-    secretAccessKey: SECRET
+    accessKeyId: AWS_ID,
+    secretAccessKey: AWS_SECRET
 });
 
 
