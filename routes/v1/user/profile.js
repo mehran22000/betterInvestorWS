@@ -4,8 +4,8 @@ var Promise = require('bluebird');
 var mongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 
 // Enter copied or downloaded access ID and secret key here
-const ID = '<ID>';
-const SECRET = '<Secret>';
+const ID = 'AKIAX4I4CAFTFX43ET7W';
+const SECRET = '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';
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3({
     accessKeyId: ID,

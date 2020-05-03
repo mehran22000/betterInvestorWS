@@ -39,6 +39,7 @@ function updateStockPrice(){
 		var index = 0;
  		for (var i in stocks){
 			var symbol = stocks[i].symbol;
+			updated_quotes.set(symbol, {'symbol':stocks[i].symbol, 'price':stocks[i].price, 'date_time':stocks[i].date_time, 'latest_update':stocks[i].latest_update});
 			url = iextrading_url.replace('SYM',symbol);
 			console.log(url);
 			request.get(url, (error, response, body) => {
@@ -80,7 +81,7 @@ function updateStockPrice(){
 						}
 					index = index + 1;	
 					}
-					if ((index == stocks.length) && (updated_quotes.size == stocks.length)) {
+					if (index == stocks.length) {
 
 						_db.collection('stock_price').remove({}, function(err, result){
 							_db.collection('stock_price').insert(Array.from(updated_quotes.values()), function(err, result){
